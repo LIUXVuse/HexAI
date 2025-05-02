@@ -1,11 +1,11 @@
 # wrangler.toml
 
 name = "qibeads-ai" # Should match your Cloudflare Pages project name
-main = "_worker.js" # Entry point for the Worker
+# main = "_worker.js" # REMOVED: Not used for Pages projects with Functions
 compatibility_date = "2024-05-02" # Use a recent compatibility date
 
 # This tells Pages where your static assets (like index.html) are.
-# Since index.html is in the root, we explicitly set it to the current directory.
+# Pages will automatically detect _worker.js in this directory.
 pages_build_output_dir = "."
 
 # By having a wrangler.toml and dependencies in package.json,
