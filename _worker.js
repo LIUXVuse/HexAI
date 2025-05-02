@@ -1,59 +1,14 @@
 // _worker.js - Modified for Bazi Analysis using Deepseek API with backend Bazi calculation
 
-// --- Bazi Calculation Logic (Simplified Example) ---
-const heavenlyStems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
-const earthlyBranches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-const zodiac = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
+// --- Import the accurate Bazi library ---
+import { BaziCalculator } from 'bazi-calculator-by-alvamind';
 
-// Placeholder/Simplified function for Bazi calculation.
-// NOTE: This is a basic example and might not be astronomically precise, especially for edge cases.
-// A production system would need a robust, well-tested library.
-function calculateBazi(year, month, day, hour = null) {
-    // Basic validation is assumed to be done before calling this function
+// --- Bazi Calculation Logic (Simplified Example) --- REMOVED ---
+// const heavenlyStems = [...]; // REMOVED
+// const earthlyBranches = [...]; // REMOVED
+// const zodiac = [...]; // REMOVED
+// function calculateBazi(...) { ... } // REMOVED
 
-    // --- Year Pillar --- (Simplified - based on year number modulo)
-    const yearOffset = (year - 1984) % 60; // 1984 is 甲子 year
-    const yearStemIndex = yearOffset % 10;
-    const yearBranchIndex = yearOffset % 12;
-    const yearPillar = heavenlyStems[yearStemIndex] + earthlyBranches[yearBranchIndex];
-
-    // --- Month Pillar --- (Highly Simplified - Placeholder Logic) ---
-    // Accurate calculation depends on Solar Terms (節氣), which is complex.
-    // Using a very basic placeholder based on month number.
-    // DO NOT USE THIS IN PRODUCTION for accurate Month Pillar.
-    const monthStemIndex = ((yearStemIndex % 5) * 2 + (month - 1)) % 10; // Simplified formula
-    const monthBranchIndex = (month + 1) % 12; //寅 starts month 1, so offset (index 2)
-    const monthPillar = heavenlyStems[monthStemIndex] + earthlyBranches[monthBranchIndex];
-
-    // --- Day Pillar --- (Highly Simplified - Placeholder Logic) ---
-    // Accurate calculation requires complex day counting from a reference point.
-    // Using a placeholder based on day number. VERY INACCURATE.
-    // DO NOT USE THIS IN PRODUCTION for accurate Day Pillar.
-    const totalDays = (year - 1900) * 365 + Math.floor((year - 1900) / 4) + day; // Rough estimate
-    const dayStemIndex = (totalDays + 4) % 10; // Example offset
-    const dayBranchIndex = (totalDays + 10) % 12; // Example offset
-    const dayPillar = heavenlyStems[dayStemIndex] + earthlyBranches[dayBranchIndex];
-
-    // --- Hour Pillar --- (Simplified based on Day Stem)
-    let hourPillar = null;
-    if (hour !== null) {
-        const hourNum = Math.floor(hour / 2); // Convert HHMM to 2-hour block index (0-11)
-        const hourBranchIndex = hourNum;
-        // Hour Stem depends on Day Stem (甲己起甲子, 乙庚起丙子, ...)
-        const hourStemStartOffset = [0, 2, 4, 6, 8]; // 甲, 丙, 戊, 庚, 壬
-        const dayStemGroup = Math.floor(dayStemIndex / 2); // 0 for 甲/乙, 1 for 丙/丁 etc.
-        const hourStemBase = hourStemStartOffset[dayStemGroup];
-        const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
-        hourPillar = heavenlyStems[hourStemIndex] + earthlyBranches[hourBranchIndex];
-    }
-
-    return {
-        yearPillar,
-        monthPillar,
-        dayPillar,
-        hourPillar // Will be null if hour is not provided
-    };
-}
 // --- End of Bazi Calculation Logic ---
 
 
@@ -159,16 +114,14 @@ async function handleAnalysisRequest(request, env) {
 
     // --- Time Handling --- //
     let hour = null;
-    let birthTimeValue = time; // Assuming time is passed as '2300', '0100' etc. or null
+    let birthTimeValue = time;
     if (birthTimeValue && /^(?:[01]\d|2[0-3])(?:[0-5]\d)$/.test(birthTimeValue)) {
-       // Convert HHMM string (like '2300' or '0100' from select) to hour index for calculation
        const hourDigits = parseInt(birthTimeValue.substring(0, 2));
-       hour = hourDigits;
-       // Adjust for 子時 spanning across midnight if needed by the library/logic
-       if (hour === 23) { /* Potentially handle late rat hour if logic requires */ }
+       hour = hourDigits; // Use the hour number (0-23)
     } else {
-        birthTimeValue = null; // Clear invalid time format if any
+        birthTimeValue = null;
     }
+    console.log(`[Worker Logic] Using Time: Year=${year}, Month=${month}, Day=${day}, Hour=${hour === null ? 'Unknown' : hour}`);
 
     // --- Get Environment Variables --- //
     const { DEEPSEEK_API_KEY } = env;
@@ -179,20 +132,55 @@ async function handleAnalysisRequest(request, env) {
         return new Response(JSON.stringify({ error: "後端 Deepseek API 金鑰未設定" }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
 
-    // --- Calculate Bazi Pillars --- //
-    console.log(`[Worker Logic] Calculating Bazi for: ${year}-${month}-${day} ${hour !== null ? `Hour: ${hour}`: '(Hour unknown)'}`);
-    const baziResult = calculateBazi(parseInt(year), parseInt(month), parseInt(day), hour);
-    console.log("[Worker Logic DEBUG] Calculated Bazi Pillars:", baziResult);
+    // --- Calculate Bazi Pillars using the accurate library --- //
+    let baziResult;
+    let baziString = "八字計算失敗"; // Default error message
+    try {
+        console.log(`[Worker Logic] Calculating Bazi using bazi-calculator-by-alvamind...`);
+        // Instantiate the calculator. Gender is optional according to docs.
+        const calculator = new BaziCalculator(
+            parseInt(year),
+            parseInt(month),
+            parseInt(day),
+            hour // Pass hour (0-23) or null
+            // gender is optional, omitting for now
+        );
 
-    // --- Construct Bazi String for Prompt --- //
-    let baziString = `年柱：${baziResult.yearPillar}，月柱：${baziResult.monthPillar}，日柱：${baziResult.dayPillar}`;
-    if (baziResult.hourPillar) {
-        baziString += `，時柱：${baziResult.hourPillar}`;
-    } else {
-        baziString += "（時辰未知）";
+        // Calculate pillars
+        const pillars = calculator.calculatePillars();
+
+        // Check if calculation was successful (library might return specific structure)
+        if (!pillars || !pillars.year || !pillars.month || !pillars.day) {
+            throw new Error("八字函式庫未能回傳有效的年月日時柱。");
+        }
+
+        // Reconstruct the Bazi string from the library's output
+        baziString = `年柱：${pillars.year.chinese}，月柱：${pillars.month.chinese}，日柱：${pillars.day.chinese}`;
+        if (pillars.time && pillars.time.chinese) { // Check if time pillar exists and has chinese representation
+            baziString += `，時柱：${pillars.time.chinese}`;
+            baziResult = { // Store for potential future use, though prompt uses the string
+                yearPillar: pillars.year.chinese,
+                monthPillar: pillars.month.chinese,
+                dayPillar: pillars.day.chinese,
+                hourPillar: pillars.time.chinese
+            };
+        } else {
+            baziString += "（時辰未知）";
+             baziResult = {
+                 yearPillar: pillars.year.chinese,
+                 monthPillar: pillars.month.chinese,
+                 dayPillar: pillars.day.chinese,
+                 hourPillar: null
+             };
+        }
+        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using library:", baziResult);
+
+    } catch (calcError) {
+         console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
+         return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // --- Construct the Prompt for Deepseek --- //
+    // --- Construct Bazi String for Prompt --- //
     // Map HHMM time values to Shichen (時辰) names and ranges for the prompt
     const shichenMap = {
         "2300": "子時 (23:00 - 00:59)",
@@ -220,14 +208,15 @@ async function handleAnalysisRequest(request, env) {
     // --- Updated System Prompt --- //
     const systemPrompt = `你是一位帶點神秘氣質又友善的命理小助手🔮，精通繁體中文和四柱八字解讀。你的任務是根據我提供的使用者八字資訊，用溫馨有趣、偶爾帶點小幽默的語氣，分析他們的八字五行，並推薦開運水晶手串。
 
-**使用者基本資料** (僅供參考，主要依據下方八字分析)：
+**使用者基本資料** (僅供參考，主要依據下方已計算出的八字分析)：
 *   西元生日：${year} 年 ${month} 月 ${day} 日
 *   出生時辰：${timeStringForPrompt}
-${location ? `*   出生地點：${location}\n`: ''}
-**已算出的四柱八字**：
+${location ? `*   出生地點：${location}
+`: ''}
+**已精確算出的四柱八字** (請以此為準進行解讀)：
 *   **${baziString}**
 
-請**根據以上提供的四柱八字**，按照以下魔法步驟進行分析，並用自然流暢的文字和溫馨可愛的 emoji ✨🌸💎 來呈現結果，避免使用生硬的 '###' 標題和過多的 '**' 粗體：
+請**根據以上提供的精確四柱八字**，按照以下魔法步驟進行分析，並用自然流暢的文字和溫馨可愛的 emoji ✨🌸💎 來呈現結果，避免使用生硬的 '###' 標題和過多的 '**' 粗體：
 
 1.  基於提供的八字 **${baziString}**，用淺顯易懂的方式，點出命盤中五行（金木水火土）的數量和大致強弱情況。**請使用列表方式呈現**，例如：
     *   🌳 木：[數量] 個 - [簡短描述，如：像森林般茂盛]
@@ -235,9 +224,8 @@ ${location ? `*   出生地點：${location}\n`: ''}
     *   ⛰️ 土：[數量] 個 - [簡短描述]
     *   💧 水：[數量] 個 - [簡短描述]
     *   ⚙️ 金：[數量] 個 - [簡短描述，如：有點害羞呢 / 閃閃發光]
-2.  根據子平八字理論，找出命盤中最需要「呼喚」或「補充」的那個五行能量。直接告訴使用者是哪個。
-3.  針對需要補充的五行，就像推薦好朋友一樣，推薦 3 到 5 種主要的水晶手串材質。假如缺失1種五行就推薦3-5種、假如缺失2種五行就根據缺失的2種五行做分別的推薦3-5種與混和推薦也是推薦2-4種
-。要說明這個材質屬於哪種五行，以及為什麼它很棒（例如：黃水晶是土系小可愛，可以帶來穩定力量；草莓晶是火系小太陽，能點燃熱情🔥）。
+2.  根據子平八字理論（基於提供的八字），找出命盤中最需要「呼喚」或「補充」的那個五行能量。直接告訴使用者是哪個。
+3.  針對需要補充的五行，就像推薦好朋友一樣，推薦 3 到 5 種主要的水晶手串材質。假如缺失1種五行就推薦3-5種、假如缺失2種五行就根據缺失的2種五行做分別的推薦3-5種與混和推薦也是推薦2-4種。要說明這個材質屬於哪種五行，以及為什麼它很棒（例如：黃水晶是土系小可愛，可以帶來穩定力量；草莓晶是火系小太陽，能點燃熱情🔥）。
 4.  最後，用溫暖鼓勵的語氣做個總結，提醒這些建議是增加生活情趣和信心的參考，並送上祝福。
 
 請將分析結果和建議整合為一段自然、溫馨且帶點神秘感的完整回覆，記得多用點可愛的 emoji 喔！`;
