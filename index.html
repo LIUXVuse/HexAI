@@ -52,17 +52,46 @@
             margin-bottom: 35px;
         }
 
+        header .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* Space between title and icon */
+            margin-bottom: 5px; /* Adjust spacing */
+        }
+
         header h1 {
-            font-size: 2.4em;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            font-weight: 600;
+            margin-bottom: 0; /* Remove default margin */
+            font-size: 2.2em; /* Slightly adjust size if needed */
+        }
+
+        header .instagram-link {
+            display: inline-flex; /* Align icon nicely */
+            vertical-align: middle;
+            color: var(--text-primary); /* Icon color */
+            transition: color 0.2s ease;
+        }
+
+        header .instagram-link:hover {
+            color: var(--text-link); /* Change color on hover */
+        }
+
+        header .instagram-icon {
+            width: 28px; /* Adjust icon size */
+            height: 28px;
+            margin-top: -3px; /* Fine-tune vertical alignment */
+        }
+
+        header .subtitle {
+            font-size: 1.5em; /* Style for subtitle */
+            color: var(--text-secondary);
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-weight: 500;
         }
 
         header p {
-            font-size: 1.1em;
-            color: var(--text-secondary);
-            line-height: 1.6;
+            margin-top: 0;
         }
 
         #bazi-form {
@@ -234,7 +263,17 @@
 <body>
     <div id="main-container">
         <header>
-            <h1>AI五行 X 手串補氣</h1>
+            <div class="title-container">
+                <h1>隨意做 SUIYI ZUO</h1>
+                <a href="https://www.instagram.com/suiyi.zuo?igsh=MWx3MjV4eDZscWluMg==" target="_blank" rel="noopener noreferrer" class="instagram-link" aria-label="Instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="instagram-icon">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37a4 4 0 1 1-4.72-4.72A4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                </a>
+            </div>
+            <h2 class="subtitle">AI五行 X 手串補氣</h2>
             <p>輸入您的出生資訊，透過 AI 分析您的八字五行，找出需要補強的部分，並推薦適合的水晶手串來為您增添好運氣！</p>
         </header>
 
