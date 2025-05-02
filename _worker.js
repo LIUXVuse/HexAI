@@ -1,10 +1,10 @@
 // _worker.js - Modified for testing dependency resolution with lodash-es
 
 // --- Import the accurate Bazi library (COMMENTED OUT FOR TEST) ---
-// import { BaziCalculator } from 'bazi-calculator-by-alvamind';
+import { BaziCalculator } from 'bazi-calculator-by-alvamind';
 
 // --- Import lodash-es for testing ---
-import { get } from 'lodash-es'; // Import a function from lodash-es
+// import { get } from 'lodash-es'; // Import a function from lodash-es
 
 // Helper function to format response for frontend (Simplified)
 function formatResponse(content, role = "assistant", finish_reason = "stop") {
@@ -126,9 +126,8 @@ async function handleAnalysisRequest(request, env) {
         return new Response(JSON.stringify({ error: "後端 Deepseek API 金鑰未設定" }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
 
-    // --- Bazi Calculation using library (COMMENTED OUT FOR TEST) --- //
-    let baziString = "八字計算已禁用 (測試中)"; // Placeholder during test
-    /*
+    // --- Calculate Bazi Pillars using the accurate library --- //
+    let baziString = "八字計算失敗"; // Default error message
     try {
         console.log(`[Worker Logic] Calculating Bazi using bazi-calculator-by-alvamind...`);
         const calculator = new BaziCalculator(
@@ -150,14 +149,17 @@ async function handleAnalysisRequest(request, env) {
         console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using library:", pillars); // Log raw result
     } catch (calcError) {
          console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
+         // Add more specific error logging if possible
+         if (calcError.stack) {
+             console.error("[Worker Logic DEBUG] Bazi Calc Error Stack:", calcError.stack);
+         }
          return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
-    */
 
-    // --- Use lodash-es function (just for testing import) ---
-    const testObj = { a: { b: 1 } };
-    const lodashResult = get(testObj, 'a.b', 'default');
-    console.log("[Worker Logic DEBUG] Lodash get result (for import test):", lodashResult);
+    // --- Use lodash-es function (REMOVED) ---
+    // const testObj = { a: { b: 1 } };
+    // const lodashResult = get(testObj, 'a.b', 'default');
+    // console.log("[Worker Logic DEBUG] Lodash get result (for import test):", lodashResult);
 
     // --- Construct Bazi String for Prompt --- //
     // Map HHMM time values to Shichen (時辰) names and ranges for the prompt
