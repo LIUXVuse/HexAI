@@ -1,16 +1,10 @@
-// _worker.js - Modified for Bazi Analysis using Deepseek API with backend Bazi calculation
+// _worker.js - Modified for testing dependency resolution with lodash-es
 
-// --- Import the accurate Bazi library ---
-import { BaziCalculator } from 'bazi-calculator-by-alvamind';
+// --- Import the accurate Bazi library (COMMENTED OUT FOR TEST) ---
+// import { BaziCalculator } from 'bazi-calculator-by-alvamind';
 
-// --- Bazi Calculation Logic (Simplified Example) --- REMOVED ---
-// const heavenlyStems = [...]; // REMOVED
-// const earthlyBranches = [...]; // REMOVED
-// const zodiac = [...]; // REMOVED
-// function calculateBazi(...) { ... } // REMOVED
-
-// --- End of Bazi Calculation Logic ---
-
+// --- Import lodash-es for testing ---
+import { get } from 'lodash-es'; // Import a function from lodash-es
 
 // Helper function to format response for frontend (Simplified)
 function formatResponse(content, role = "assistant", finish_reason = "stop") {
@@ -132,53 +126,38 @@ async function handleAnalysisRequest(request, env) {
         return new Response(JSON.stringify({ error: "後端 Deepseek API 金鑰未設定" }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
 
-    // --- Calculate Bazi Pillars using the accurate library --- //
-    let baziResult;
-    let baziString = "八字計算失敗"; // Default error message
+    // --- Bazi Calculation using library (COMMENTED OUT FOR TEST) --- //
+    let baziString = "八字計算已禁用 (測試中)"; // Placeholder during test
+    /*
     try {
         console.log(`[Worker Logic] Calculating Bazi using bazi-calculator-by-alvamind...`);
-        // Instantiate the calculator. Gender is optional according to docs.
         const calculator = new BaziCalculator(
             parseInt(year),
             parseInt(month),
             parseInt(day),
-            hour // Pass hour (0-23) or null
-            // gender is optional, omitting for now
+            hour
         );
-
-        // Calculate pillars
         const pillars = calculator.calculatePillars();
-
-        // Check if calculation was successful (library might return specific structure)
         if (!pillars || !pillars.year || !pillars.month || !pillars.day) {
             throw new Error("八字函式庫未能回傳有效的年月日時柱。");
         }
-
-        // Reconstruct the Bazi string from the library's output
         baziString = `年柱：${pillars.year.chinese}，月柱：${pillars.month.chinese}，日柱：${pillars.day.chinese}`;
-        if (pillars.time && pillars.time.chinese) { // Check if time pillar exists and has chinese representation
+        if (pillars.time && pillars.time.chinese) {
             baziString += `，時柱：${pillars.time.chinese}`;
-            baziResult = { // Store for potential future use, though prompt uses the string
-                yearPillar: pillars.year.chinese,
-                monthPillar: pillars.month.chinese,
-                dayPillar: pillars.day.chinese,
-                hourPillar: pillars.time.chinese
-            };
         } else {
             baziString += "（時辰未知）";
-             baziResult = {
-                 yearPillar: pillars.year.chinese,
-                 monthPillar: pillars.month.chinese,
-                 dayPillar: pillars.day.chinese,
-                 hourPillar: null
-             };
         }
-        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using library:", baziResult);
-
+        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using library:", pillars); // Log raw result
     } catch (calcError) {
          console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
          return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
+    */
+
+    // --- Use lodash-es function (just for testing import) ---
+    const testObj = { a: { b: 1 } };
+    const lodashResult = get(testObj, 'a.b', 'default');
+    console.log("[Worker Logic DEBUG] Lodash get result (for import test):", lodashResult);
 
     // --- Construct Bazi String for Prompt --- //
     // Map HHMM time values to Shichen (時辰) names and ranges for the prompt
