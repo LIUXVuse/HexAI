@@ -1,0 +1,9 @@
+# Environment variables
+.env
+.dev.vars
+
+# Node dependencies
+node_modules/
+
+# Wrangler/Cloudflare Pages build artifacts and temp files
+.wrangler/ 
