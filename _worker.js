@@ -1,7 +1,9 @@
 // _worker.js - Modified for testing dependency resolution with lodash-es
 
-// --- Import the accurate Bazi library (COMMENTED OUT FOR TEST) ---
-import { BaziCalculator } from 'bazi-calculator-by-alvamind';
+// --- Import the accurate Bazi library fork and dependencies ---
+import { BaziCalculator } from '@aharris02/bazi-calculator-by-alvamind';
+import { toDate } from 'date-fns-tz';
+import { isValid } from 'date-fns';
 
 // --- Import lodash-es for testing ---
 // import { get } from 'lodash-es'; // Import a function from lodash-es
@@ -106,16 +108,40 @@ async function handleAnalysisRequest(request, env) {
          return new Response(JSON.stringify({ error: "無效的時間格式，請使用 HHMM (例如 1430)。" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    // --- Time Handling --- //
-    let hour = null;
+    // --- Time Handling & Date Object Creation --- //
+    let hour = 12; // Default to noon if time is unknown
+    let minute = 0;
+    let isTimeKnown = false;
     let birthTimeValue = time;
+
     if (birthTimeValue && /^(?:[01]\d|2[0-3])(?:[0-5]\d)$/.test(birthTimeValue)) {
-       const hourDigits = parseInt(birthTimeValue.substring(0, 2));
-       hour = hourDigits; // Use the hour number (0-23)
+       hour = parseInt(birthTimeValue.substring(0, 2));
+       minute = parseInt(birthTimeValue.substring(2, 4));
+       isTimeKnown = true;
     } else {
-        birthTimeValue = null;
+        birthTimeValue = null; // Keep track that original time was invalid/missing
     }
-    console.log(`[Worker Logic] Using Time: Year=${year}, Month=${month}, Day=${day}, Hour=${hour === null ? 'Unknown' : hour}`);
+
+    // Construct ISO-like string for date-fns-tz
+    const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+
+    // **Determine Timezone** - This is crucial for the library.
+    // Ideally, get from user input or infer based on location.
+    // Using a default for now, **replace this with a proper timezone** (e.g., 'Asia/Taipei')
+    const timeZone = 'Asia/Taipei'; // <<< --- !!! IMPORTANT: SET A REAL TIMEZONE HERE !!!
+
+    let birthDate;
+    try {
+        birthDate = toDate(dateString, { timeZone });
+        if (!isValid(birthDate)) {
+            throw new Error("無效的日期或時間組合。");
+        }
+    } catch (dateError) {
+        console.error("[Worker Logic] Error creating timezone-aware date:", dateError);
+        return new Response(JSON.stringify(formatResponse(`處理日期時間錯誤：${dateError.message}`, "assistant", "error")), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    console.log(`[Worker Logic] Using Date: ${birthDate}, Timezone: ${timeZone}, Time Known: ${isTimeKnown}`);
 
     // --- Get Environment Variables --- //
     const { DEEPSEEK_API_KEY } = env;
@@ -126,34 +152,38 @@ async function handleAnalysisRequest(request, env) {
         return new Response(JSON.stringify({ error: "後端 Deepseek API 金鑰未設定" }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
 
-    // --- Calculate Bazi Pillars using the accurate library --- //
-    let baziString = "八字計算失敗"; // Default error message
+    // --- Calculate Bazi Pillars using the accurate library fork --- //
+    let baziString = "八字計算失敗";
     try {
-        console.log(`[Worker Logic] Calculating Bazi using bazi-calculator-by-alvamind...`);
+        console.log(`[Worker Logic] Calculating Bazi using @aharris02/bazi-calculator-by-alvamind...`);
+        // Instantiate the calculator using the fork's constructor signature
         const calculator = new BaziCalculator(
-            parseInt(year),
-            parseInt(month),
-            parseInt(day),
-            hour
+            birthDate,    // Timezone-aware Date object
+            undefined,    // Gender (optional, defaults to male in lib if undefined)
+            timeZone,     // IANA Timezone string
+            isTimeKnown   // Pass whether time is known
         );
+
         const pillars = calculator.calculatePillars();
+
         if (!pillars || !pillars.year || !pillars.month || !pillars.day) {
             throw new Error("八字函式庫未能回傳有效的年月日時柱。");
         }
+
         baziString = `年柱：${pillars.year.chinese}，月柱：${pillars.month.chinese}，日柱：${pillars.day.chinese}`;
-        if (pillars.time && pillars.time.chinese) {
+        if (isTimeKnown && pillars.time && pillars.time.chinese) {
             baziString += `，時柱：${pillars.time.chinese}`;
         } else {
             baziString += "（時辰未知）";
         }
-        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using library:", pillars); // Log raw result
+        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using fork library:", pillars);
+
     } catch (calcError) {
-         console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
-         // Add more specific error logging if possible
+        console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
          if (calcError.stack) {
              console.error("[Worker Logic DEBUG] Bazi Calc Error Stack:", calcError.stack);
          }
-         return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
     // --- Use lodash-es function (REMOVED) ---
@@ -180,10 +210,11 @@ async function handleAnalysisRequest(request, env) {
 
     // Construct time string for the prompt
     let timeStringForPrompt = "(時辰未知)";
-    if (birthTimeValue && shichenMap[birthTimeValue]) {
+    if (isTimeKnown && birthTimeValue && shichenMap[birthTimeValue]) {
         timeStringForPrompt = shichenMap[birthTimeValue];
-    } else if (birthTimeValue) {
-        timeStringForPrompt = `大約 ${birthTimeValue.substring(0, 2)} 時 ${birthTimeValue.substring(2)} 分`;
+    } else if (isTimeKnown) {
+        // Fallback if time is known but not matching select value (shouldn't happen)
+        timeStringForPrompt = `大約 ${String(hour).padStart(2,'0')} 時 ${String(minute).padStart(2,'0')} 分`;
     }
 
     // --- Updated System Prompt --- //

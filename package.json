@@ -10,7 +10,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bazi-calculator-by-alvamind": "^1.0.0",
+    "@aharris02/bazi-calculator-by-alvamind": "^1.0.15",
+    "date-fns": "^2.0.0",
+    "date-fns-tz": "^2.0.0",
     "lodash-es": "^4.17.21" 
   },
   "devDependencies": {
