@@ -231,7 +231,47 @@
             #submitButton {
                  font-size: 1em;
             }
+            .year-input-group {
+                flex-direction: column; /* Stack year input/select on small screens */
+                gap: 10px;
+            }
+            .year-select-helper {
+                width: 100%; /* Make select full width on small screens */
+            }
         }
+
+        /* Style for the year input group */
+        .year-input-group {
+            display: flex;
+            align-items: center; /* Vertically align items if needed */
+            gap: 10px; /* Space between input and select */
+        }
+
+        #birthYear {
+            flex-grow: 1; /* Allow input to take available space */
+            /* Optionally adjust width if needed, e.g., width: 60%; */
+        }
+
+        .year-select-helper {
+            padding: 12px 10px; /* Adjust padding if needed */
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95em; /* Slightly smaller font */
+            background-color: var(--bg-input);
+            color: var(--text-secondary);
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            flex-shrink: 0; /* Prevent select from shrinking too much */
+            /* Optionally set a fixed width, e.g., width: 150px; */
+        }
+
+        .year-select-helper:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(181, 138, 109, 0.15);
+        }
+
          /* Markdown formatting for results (optional, if API returns markdown) */
         #result-content strong {
              font-weight: 600;
@@ -281,7 +321,13 @@
         <form id="bazi-form">
             <div class="form-group">
                 <label for="birthYear">西元年 (必填)</label>
-                <input type="number" id="birthYear" name="birthYear" placeholder="例如 1990" required min="1900" max="2099">
+                <div class="year-input-group">
+                    <input type="number" id="birthYear" name="birthYear" placeholder="例如 1990" required min="1920" max="2099">
+                    <select id="birthYearSelect" class="year-select-helper">
+                        <option value="" disabled selected>-- 或由此快速選擇 --</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <label for="birthMonth">月 (必填)</label>
@@ -348,8 +394,20 @@
         const errorDisplay = document.getElementById('error');
         const resultArea = document.getElementById('result-area');
         const resultContent = document.getElementById('result-content');
+        const yearSelect = document.getElementById('birthYearSelect'); // Get the year select element
 
-        // --- Populate Month and Day Selectors --- //
+        // --- Populate Year, Month and Day Selectors --- //
+        function populateYears() {
+            const currentYear = new Date().getFullYear();
+            const startYear = 1920;
+            for (let i = currentYear; i >= startYear; i--) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i} 年`;
+                yearSelect.appendChild(option);
+            }
+        }
+
         function populateMonths() {
             for (let i = 1; i <= 12; i++) {
                 const option = document.createElement('option');
@@ -370,8 +428,16 @@
         }
 
         // Initial population
+        populateYears(); // Populate years on load
         populateMonths();
         populateDays(31); // Default to 31 days
+
+        // --- Event Listener for Year Select --- //
+        yearSelect.addEventListener('change', () => {
+            if (yearSelect.value) {
+                yearInput.value = yearSelect.value; // Update input when select changes
+            }
+        });
 
         // --- Dynamic Day Population (Optional Enhancement) --- //
         // You could add logic here to change days based on selected month/year
