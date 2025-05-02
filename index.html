@@ -97,14 +97,17 @@
 
         #bazi-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
-            gap: 20px;
+            /* Changed: Use a slightly wider min width and ensure consistent column creation */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; /* Keep gap */
             margin-bottom: 30px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
+            /* Added: Ensure consistent bottom margin for spacing */
+            margin-bottom: 5px;
         }
 
         .form-group label {
@@ -131,6 +134,9 @@
             font-family: inherit;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
             box-sizing: border-box;
+            /* Added: Ensure consistent height */
+            height: 48px; /* Example height, adjust as needed */
+            width: 100%; /* Make elements fill their grid cell */
         }
 
         .form-group input::placeholder {
@@ -157,6 +163,7 @@
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease;
             margin-top: 15px; /* Add some space above button */
+            height: auto; /* Reset height for button */
         }
 
         #submitButton:hover {
@@ -227,6 +234,7 @@
             }
             #bazi-form {
                  grid-template-columns: 1fr; /* Stack elements on smaller screens */
+                 gap: 15px; /* Adjust gap for single column */
             }
             #submitButton {
                  font-size: 1em;
@@ -234,22 +242,27 @@
             .year-input-group {
                 flex-direction: column; /* Stack year input/select on small screens */
                 gap: 10px;
+                align-items: stretch; /* Make items fill width */
             }
             .year-select-helper {
                 width: 100%; /* Make select full width on small screens */
+            }
+            .form-group input, .form-group select {
+                height: 45px; /* Slightly smaller height on mobile */
             }
         }
 
         /* Style for the year input group */
         .year-input-group {
             display: flex;
-            align-items: center; /* Vertically align items if needed */
+            align-items: center; /* Vertically align items */
             gap: 10px; /* Space between input and select */
         }
 
         #birthYear {
-            flex-grow: 1; /* Allow input to take available space */
-            /* Optionally adjust width if needed, e.g., width: 60%; */
+            /* flex-grow: 1; */ /* Allow input to take available space - REMOVED, let grid handle width */
+            /* Changed: Set a more specific width for better control */
+            width: calc(65% - 5px); /* Adjust percentage and gap compensation */
         }
 
         .year-select-helper {
@@ -262,8 +275,9 @@
             font-family: inherit;
             cursor: pointer;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            flex-shrink: 0; /* Prevent select from shrinking too much */
-            /* Optionally set a fixed width, e.g., width: 150px; */
+            /* flex-shrink: 0; */ /* Prevent select from shrinking too much - REMOVED, let grid handle width */
+            /* Changed: Set a more specific width for better control */
+            width: calc(35% - 5px); /* Adjust percentage and gap compensation */
         }
 
         .year-select-helper:focus {
