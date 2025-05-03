@@ -1,323 +1,161 @@
-// _worker.js - Modified for testing dependency resolution with lodash-es
-
-// --- Import the accurate Bazi library fork and dependencies ---
-import { BaziCalculator } from '@aharris02/bazi-calculator-by-alvamind';
-import { toDate } from 'date-fns-tz';
-import { isValid } from 'date-fns';
-
-// --- Import lodash-es for testing ---
-// import { get } from 'lodash-es'; // Import a function from lodash-es
-
-// Helper function to format response for frontend (Simplified)
-function formatResponse(content, role = "assistant", finish_reason = "stop") {
-  const finalContent = typeof content === 'string' ? content : '(无效的回應内容)';
-  return {
-    choices: [
-      {
-        message: { role, content: finalContent },
-        finish_reason,
-      },
-    ],
-  };
-}
-
-// --- Deepseek Interaction --- (No changes needed in the function itself initially)
-async function callDeepseek(apiKey, messages) {
-    const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
-    console.log("[Worker Deepseek] Calling Deepseek API...");
-
-    // The system prompt is now part of the 'messages' passed in
-    console.log("[Worker Deepseek DEBUG] Messages being sent (including system prompt):", JSON.stringify(messages, null, 2));
-
-    const payload = {
-        model: "deepseek-chat", // Use the desired Deepseek model
-        messages: messages,
-        stream: false // Keep non-streaming for this use case for simplicity
-    };
-
-    const response = await fetch(DEEPSEEK_API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(payload)
-    });
-
-    console.log(`[Worker Deepseek] Received response status from Deepseek: ${response.status}`);
-
-    if (!response.ok) {
-        let errorBody = "(Failed to read Deepseek error body)";
-        try { errorBody = await response.text(); } catch (e) { /* ignore */ }
-        console.error(`[Worker Deepseek] Deepseek API Error: ${response.status}. Body: ${errorBody}`);
-        // Throw an error with a user-friendly message if possible
-        let userError = `Deepseek API 請求失敗 (狀態碼: ${response.status})。`;
-        if (errorBody.includes("insufficient_quota")) {
-            userError = "Deepseek API 額度不足，請檢查您的帳戶。";
-        }
-        throw new Error(userError);
-    }
-
-    const result = await response.json();
-    console.log("[Worker Deepseek DEBUG] Parsed Deepseek JSON result:", JSON.stringify(result).substring(0, 500) + '...');
-
-    // Extract the actual response content
-     if (result.choices && result.choices[0] && result.choices[0].message && result.choices[0].message.content) {
-         return result.choices[0].message.content;
-     } else {
-         console.warn("[Worker Deepseek DEBUG] Could not find expected content in Deepseek JSON response.");
-         throw new Error("Deepseek 回應格式不符預期，無法提取分析結果。");
-     }
-}
-
-
 /**
- * Handles Bazi analysis requests.
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run `npm run dev` in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8788/ to see your worker in action
+ * - Run `npm run deploy` to publish your worker
+ *
+ * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
+ * `Env` object can be regenerated with `npm run cf-typegen`.
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
  */
-async function handleAnalysisRequest(request, env) {
-    console.log("[Worker Request] Entering handleAnalysisRequest...");
-    let requestBody;
-    try {
-        requestBody = await request.json();
-        console.log("[Worker Request DEBUG] Parsed request body:", requestBody);
-    } catch (e) {
-        console.error("[Worker Request] Invalid JSON in request body:", e);
-        return new Response(JSON.stringify({ error: "无效的 JSON 请求体" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
 
-    // --- Extract and Validate Input Data --- //
-    const { year, month, day, time, location } = requestBody;
-
-    if (!year || !month || !day) {
-        console.error("[Worker Request] Missing required fields (year, month, day).", requestBody);
-        return new Response(JSON.stringify({ error: "缺少必填欄位：西元年、月、日。" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-
-    // Basic validation (can be more sophisticated)
-    if (isNaN(parseInt(year)) || parseInt(year) < 1900 || parseInt(year) > new Date().getFullYear() + 1) {
-        return new Response(JSON.stringify({ error: "無效的西元年份。" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-     if (isNaN(parseInt(month)) || parseInt(month) < 1 || parseInt(month) > 12) {
-        return new Response(JSON.stringify({ error: "無效的月份。" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-    if (isNaN(parseInt(day)) || parseInt(day) < 1 || parseInt(day) > 31) { // Basic check, could improve based on month/year
-        return new Response(JSON.stringify({ error: "無效的日期。" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-    // Optional validation for time format (HHMM)
-    if (time && !/^(?:[01]\d|2[0-3])(?:[0-5]\d)$/.test(time)) {
-         return new Response(JSON.stringify({ error: "無效的時間格式，請使用 HHMM (例如 1430)。" }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-
-    // --- Time Handling & Date Object Creation --- //
-    let hour = 12; // Default to noon if time is unknown
-    let minute = 0;
-    let isTimeKnown = false;
-    let birthTimeValue = time;
-
-    if (birthTimeValue && /^(?:[01]\d|2[0-3])(?:[0-5]\d)$/.test(birthTimeValue)) {
-       hour = parseInt(birthTimeValue.substring(0, 2));
-       minute = parseInt(birthTimeValue.substring(2, 4));
-       isTimeKnown = true;
-    } else {
-        birthTimeValue = null; // Keep track that original time was invalid/missing
-    }
-
-    // Construct ISO-like string for date-fns-tz
-    const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-
-    // **Determine Timezone** - This is crucial for the library.
-    // Ideally, get from user input or infer based on location.
-    // Using a default for now, **replace this with a proper timezone** (e.g., 'Asia/Taipei')
-    const timeZone = 'Asia/Taipei'; // <<< --- !!! IMPORTANT: SET A REAL TIMEZONE HERE !!!
-
-    let birthDate;
-    try {
-        birthDate = toDate(dateString, { timeZone });
-        if (!isValid(birthDate)) {
-            throw new Error("無效的日期或時間組合。");
-        }
-    } catch (dateError) {
-        console.error("[Worker Logic] Error creating timezone-aware date:", dateError);
-        return new Response(JSON.stringify(formatResponse(`處理日期時間錯誤：${dateError.message}`, "assistant", "error")), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    }
-
-    console.log(`[Worker Logic] Using Date: ${birthDate}, Timezone: ${timeZone}, Time Known: ${isTimeKnown}`);
-
-    // --- Get Environment Variables --- //
-    const { DEEPSEEK_API_KEY } = env;
-    console.log(`[Worker ENV DEBUG] DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY ? 'Loaded' : 'MISSING!'}`);
-
-    if (!DEEPSEEK_API_KEY) {
-        console.error("[Worker ENV] DEEPSEEK_API_KEY is missing.");
-        return new Response(JSON.stringify({ error: "後端 Deepseek API 金鑰未設定" }), { status: 500, headers: { "Content-Type": "application/json" } });
-    }
-
-    // --- Calculate Bazi Pillars using the accurate library fork --- //
-    let baziString = "八字計算失敗";
-    try {
-        console.log(`[Worker Logic] Calculating Bazi using @aharris02/bazi-calculator-by-alvamind...`);
-        // Instantiate the calculator using the fork's constructor signature
-        const calculator = new BaziCalculator(
-            birthDate,    // Timezone-aware Date object
-            undefined,    // Gender (optional, defaults to male in lib if undefined)
-            timeZone,     // IANA Timezone string
-            isTimeKnown   // Pass whether time is known
-        );
-
-        const pillars = calculator.calculatePillars();
-
-        if (!pillars || !pillars.year || !pillars.month || !pillars.day) {
-            throw new Error("八字函式庫未能回傳有效的年月日時柱。");
-        }
-
-        baziString = `年柱：${pillars.year.chinese}，月柱：${pillars.month.chinese}，日柱：${pillars.day.chinese}`;
-        if (isTimeKnown && pillars.time && pillars.time.chinese) {
-            baziString += `，時柱：${pillars.time.chinese}`;
-        } else {
-            baziString += "（時辰未知）";
-        }
-        console.log("[Worker Logic DEBUG] Calculated Bazi Pillars using fork library:", pillars);
-
-    } catch (calcError) {
-        console.error("[Worker Logic] Error during Bazi calculation library execution:", calcError);
-         if (calcError.stack) {
-             console.error("[Worker Logic DEBUG] Bazi Calc Error Stack:", calcError.stack);
-         }
-        return new Response(JSON.stringify(formatResponse(`八字排盤計算失敗：${calcError.message}`, "assistant", "error")), { status: 500, headers: { 'Content-Type': 'application/json' } });
-    }
-
-    // --- Use lodash-es function (REMOVED) ---
-    // const testObj = { a: { b: 1 } };
-    // const lodashResult = get(testObj, 'a.b', 'default');
-    // console.log("[Worker Logic DEBUG] Lodash get result (for import test):", lodashResult);
-
-    // --- Construct Bazi String for Prompt --- //
-    // Map HHMM time values to Shichen (時辰) names and ranges for the prompt
-    const shichenMap = {
-        "2300": "子時 (23:00 - 00:59)",
-        "0100": "丑時 (01:00 - 02:59)",
-        "0300": "寅時 (03:00 - 04:59)",
-        "0500": "卯時 (05:00 - 06:59)",
-        "0700": "辰時 (07:00 - 08:59)",
-        "0900": "巳時 (09:00 - 10:59)",
-        "1100": "午時 (11:00 - 12:59)",
-        "1300": "未時 (13:00 - 14:59)",
-        "1500": "申時 (15:00 - 16:59)",
-        "1700": "酉時 (17:00 - 18:59)",
-        "1900": "戌時 (19:00 - 20:59)",
-        "2100": "亥時 (21:00 - 22:59)"
-    };
-
-    // Construct time string for the prompt
-    let timeStringForPrompt = "(時辰未知)";
-    if (isTimeKnown && birthTimeValue && shichenMap[birthTimeValue]) {
-        timeStringForPrompt = shichenMap[birthTimeValue];
-    } else if (isTimeKnown) {
-        // Fallback if time is known but not matching select value (shouldn't happen)
-        timeStringForPrompt = `大約 ${String(hour).padStart(2,'0')} 時 ${String(minute).padStart(2,'0')} 分`;
-    }
-
-    // --- Updated System Prompt --- //
-    const systemPrompt = `你是一位帶點神秘氣質又友善的命理小助手🔮，精通繁體中文和四柱八字解讀。你的任務是根據我提供的使用者八字資訊，用溫馨有趣、偶爾帶點小幽默的語氣，分析他們的八字五行，並推薦開運水晶手串。
-
-**使用者基本資料** (僅供參考，主要依據下方已計算出的八字分析)：
-*   西元生日：${year} 年 ${month} 月 ${day} 日
-*   出生時辰：${timeStringForPrompt}
-${location ? `*   出生地點：${location}
-`: ''}
-**已精確算出的四柱八字** (請以此為準進行解讀)：
-*   **${baziString}**
-
-請**根據以上提供的精確四柱八字**，按照以下魔法步驟進行分析，並用自然流暢的文字和溫馨可愛的 emoji ✨🌸💎 來呈現結果，避免使用生硬的 '###' 標題和過多的 '**' 粗體：
-
-1.  基於提供的八字 **${baziString}**，用淺顯易懂的方式，點出命盤中五行（金木水火土）的數量和大致強弱情況。**請使用列表方式呈現**，例如：
-    *   🌳 木：[數量] 個 - [簡短描述，如：像森林般茂盛]
-    *   🔥 火：[數量] 個 - [簡短描述，如：溫暖的小火苗]
-    *   ⛰️ 土：[數量] 個 - [簡短描述]
-    *   💧 水：[數量] 個 - [簡短描述]
-    *   ⚙️ 金：[數量] 個 - [簡短描述，如：有點害羞呢 / 閃閃發光]
-2.  根據子平八字理論（基於提供的八字），找出命盤中最需要「呼喚」或「補充」的那個五行能量。直接告訴使用者是哪個。
-3.  針對需要補充的五行，就像推薦好朋友一樣，推薦 3 到 5 種主要的水晶手串材質。假如缺失1種五行就推薦3-5種、假如缺失2種五行就根據缺失的2種五行做分別的推薦3-5種與混和推薦也是推薦2-4種。要說明這個材質屬於哪種五行，以及為什麼它很棒（例如：黃水晶是土系小可愛，可以帶來穩定力量；草莓晶是火系小太陽，能點燃熱情🔥）。
-4.  最後，用溫暖鼓勵的語氣做個總結，提醒這些建議是增加生活情趣和信心的參考，並送上祝福。
-
-請將分析結果和建議整合為一段自然、溫馨且帶點神秘感的完整回覆，記得多用點可愛的 emoji 喔！`;
-
-    // Prepare messages for Deepseek
-    const messagesForDeepseek = [
-        { role: "system", content: systemPrompt },
-        // No separate user message needed as context is in system prompt
-    ];
-
-    console.log(`[Worker Logic] Constructed System Prompt for Deepseek (length: ${systemPrompt.length})`);
-
-    // --- Call Deepseek API --- //
-    try {
-        console.log("[Worker Logic] Calling Deepseek for Bazi interpretation...");
-        const deepseekAnswer = await callDeepseek(DEEPSEEK_API_KEY, messagesForDeepseek);
-
-        // Format and return Deepseek response
-        console.log(`[Worker Logic DEBUG] Received Deepseek analysis (length: ${deepseekAnswer.length})`);
-        const formattedResponse = formatResponse(deepseekAnswer);
-        console.log("[Worker Logic DEBUG] Sending formatted Deepseek response to client.");
-        return new Response(JSON.stringify(formattedResponse), { status: 200, headers: { 'Content-Type': 'application/json' } });
-
-    } catch (e) {
-        console.error("[Worker Logic] FATAL Error during Deepseek API call or processing:", e);
-        if (e.stack) console.error("[Worker Logic DEBUG] Error Stack:", e.stack);
-        const errorMsg = "處理請求時發生內部錯誤 (Worker)";
-        const errorDetail = e.message || "Unknown error"; // Use the error message from callDeepseek
-        // Return error in the same format as successful response for consistency
-        const errorResponse = formatResponse(`分析失敗：${errorDetail}`, "assistant", "error");
-        return new Response(JSON.stringify(errorResponse), { status: 500, headers: { 'Content-Type': 'application/json' } });
-    }
-}
-
-// _worker.js entry point
 export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const pathname = url.pathname;
-    const method = request.method;
+	async fetch(request, env, ctx) {
+		const url = new URL(request.url);
 
-    console.log(`[Worker Entry] Request: ${method} ${pathname}`);
+		// API 請求路由
+		if (url.pathname === '/api/interpret' && request.method === 'POST') {
+			return handleApiRequest(request, env);
+		}
 
-    // API route for analysis
-    if (pathname === "/api/analyze" && method === "POST") {
-        return handleAnalysisRequest(request, env);
-    }
+		// 處理靜態文件請求 (例如 index.html)
+		if (url.pathname === '/' || url.pathname === '/index.html') {
+			// 這裡我們假設 index.html 是根目錄下的主要文件
+			// 在實際的 Cloudflare Pages 項目中，靜態文件通常由平台自動處理
+			// 這個 fetch 主要是為了本地開發 (wrangler pages dev) 或純 Worker 部署時能返回 HTML
+			// 如果你的 index.html 和 js 文件是通過 Pages 的 Git 集成部署的，這部分可能不需要，
+			// 但保留它對於本地測試 `wrangler pages dev .` 或純 Worker 部署是有幫助的。
 
-    // Static assets route (serving index.html etc.)
-    if (method === "GET") {
-        try {
-            // Use the default asset handling provided by Pages
-            // No need to explicitly check env.ASSETS if using standard Pages build output
-            // Assuming index.html and other assets are in the build output directory
-            return env.ASSETS.fetch(request);
-        } catch (e) {
-            // Basic error handling for asset fetching
-             if (e.message.includes("Could not find asset")) {
-                  console.error(`[Worker Static] Asset not found for path: ${pathname}`, e);
-                  // Specifically check for root path and serve index.html if not found by default routing
-                  if (pathname === '/' ) {
-                      console.warn("[Worker Static] Root path '/' not found, attempting to serve '/index.html'");
-                      try {
-                          let newRequest = new Request(new URL('/index.html', request.url), request);
-                          return await env.ASSETS.fetch(newRequest);
-                      } catch (nestedError) {
-                           console.error("[Worker Static] Failed to serve '/index.html' as fallback for root.", nestedError);
-                           return new Response("找不到主要頁面 (index.html)", { status: 404 });
-                      }
-                  }
-                  return new Response("資源未找到 (Not Found)", { status: 404 });
-             } else {
-                 console.error(`[Worker Static] Error fetching asset: ${pathname}`, e);
-                 return new Response("無法讀取靜態資源", { status: 500 });
+			// --- 開始: 返回 index.html --- //
+			// 重要：在 Cloudflare Pages 中，你不需要手動提供 index.html
+			// 這裡只是一個示例，假設你需要從 Worker 返回 HTML
+			// 你需要將 index.html 的內容放在這裡或從 KV/R2 讀取
+			// --- 為了簡化，我們只返回一個基本提示 --- //
+			// return new Response("請訪問實際的 Cloudflare Pages 部署地址查看前端頁面", { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+
+			// --- 實際返回 index.html 的示例 (如果需要) ---
+			// import indexHtml from './index.html'; // 需要配置打包工具支持
+			// return new Response(indexHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+
+            // 在 Cloudflare Pages 的 `_worker.js` 中，env.ASSETS.fetch 可以用來獲取靜態資源
+            try {
+                 // 嘗試從 Pages 的靜態資源中獲取 index.html
+                 return env.ASSETS.fetch(request);
+            } catch (e) {
+                 console.error("Failed to fetch from env.ASSETS:", e);
+                 // 如果 ASSETS 不可用（例如純 Worker 部署），返回備用信息
+                 return new Response('找不到前端資源。請確保項目已正確部署。_worker.js', { status: 404 });
+            }
+		}
+
+        // --- 新增：處理 JS 文件請求 (用於本地開發或純 Worker) ---
+         if (url.pathname === '/lunar.js' || url.pathname === '/calendar.js') {
+             try {
+                 return env.ASSETS.fetch(request);
+             } catch (e) {
+                 console.error("Failed to fetch JS from env.ASSETS:", e);
+                 return new Response(`/* Resource ${url.pathname} not found */`, { status: 404, headers: { 'Content-Type': 'application/javascript' } });
              }
-        }
-    }
+         }
 
-    // Other methods
-    console.warn(`[Worker Entry] Method ${method} not allowed for path '${pathname}'.`);
-    return new Response("方法不允許 (Method Not Allowed)", { status: 405 });
-  },
+		// 對於其他未匹配的路徑，返回 404
+		return new Response('路徑未找到', { status: 404 });
+	},
 };
+
+async function handleApiRequest(request, env) {
+	// 檢查 API Key 是否設置
+	if (!env.DEEPSEEK_API_KEY) {
+		return new Response(JSON.stringify({ error: { message: 'DeepSeek API 金鑰未設定' } }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+
+	let requestData;
+	try {
+		requestData = await request.json();
+	} catch (e) {
+		return new Response(JSON.stringify({ error: { message: '請求 Body 解析失敗，請確認格式為 JSON' } }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+
+	// 從請求中獲取前端已格式化的 prompt
+	const userPrompt = requestData.prompt;
+
+	if (!userPrompt || typeof userPrompt !== 'string') {
+		return new Response(JSON.stringify({ error: { message: '請求中缺少有效的 prompt 字符串' } }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+
+	console.log("Received prompt for DeepSeek:", userPrompt);
+
+	// DeepSeek API Endpoint
+	const apiEndpoint = 'https://api.deepseek.com/chat/completions';
+
+	// 構建發送給 DeepSeek 的請求體
+	const deepseekPayload = {
+		model: 'deepseek-chat', // 或者選擇其他合適的模型
+		messages: [
+			{ role: 'system', content: '你是一個精通三傳占卜和中華術數的專家，請根據使用者提供的占卜結果進行詳細、專業且易於理解的解讀。請使用繁體中文回答。' },
+			{ role: 'user', content: userPrompt } // 將前端生成的 prompt 直接傳給 user role
+		],
+		stream: false, // 設置為 false 以獲取完整的回應
+	};
+
+	try {
+		// 發送請求到 DeepSeek API
+		const deepseekResponse = await fetch(apiEndpoint, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
+			},
+			body: JSON.stringify(deepseekPayload),
+		});
+
+		// 檢查 DeepSeek API 的回應狀態
+		if (!deepseekResponse.ok) {
+			const errorBody = await deepseekResponse.text();
+			console.error(`DeepSeek API Error (${deepseekResponse.status}): ${errorBody}`);
+			return new Response(JSON.stringify({ error: { message: `DeepSeek API 請求失敗 (${deepseekResponse.status}): ${errorBody}` } }), {
+				status: deepseekResponse.status,
+				headers: { 'Content-Type': 'application/json' },
+			});
+		}
+
+		// 解析 DeepSeek 的回應
+		const deepseekResult = await deepseekResponse.json();
+		console.log("Received from DeepSeek:", JSON.stringify(deepseekResult));
+
+		// 提取 DeepSeek 生成的解讀文本
+		let interpretation = '無法獲取 AI 解讀結果。'; // 預設值
+		if (deepseekResult.choices && deepseekResult.choices[0] && deepseekResult.choices[0].message && deepseekResult.choices[0].message.content) {
+			interpretation = deepseekResult.choices[0].message.content.trim();
+		} else if (deepseekResult.error) {
+            console.error("DeepSeek returned an error object:", deepseekResult.error);
+             return new Response(JSON.stringify({ error: { message: `DeepSeek 返回錯誤: ${deepseekResult.error.message || JSON.stringify(deepseekResult.error)}` } }), {
+                 status: 500, // 或根據 DeepSeek 錯誤調整
+                 headers: { 'Content-Type': 'application/json' },
+             });
+        }
+
+		// 將解讀結果返回給前端
+		return new Response(JSON.stringify({ interpretation: interpretation }), {
+			headers: { 'Content-Type': 'application/json; charset=utf-8' }, // 確保 UTF-8 編碼
+		});
+
+	} catch (error) {
+		console.error('處理 API 請求時發生錯誤:', error);
+		return new Response(JSON.stringify({ error: { message: `內部伺服器錯誤: ${error.message}` } }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+}

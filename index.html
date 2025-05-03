@@ -3,534 +3,759 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>隨意做 SUIYI ZUO 手串</title>
-    <meta property="og:title" content="隨意做 SUIYI ZUO 手串" />
+    <title>HexAI - The voice of the hexagrams, interpreted by AI.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { /* Warm & Mystical Theme */
-            --bg-main: #f4e9e1; /* Soft parchment / light warm background */
-            --bg-panel: #ffffff; /* White panel for contrast */
-            --bg-input: #fdfbf9;
-            --bg-button: #8c6f5a; /* Earthy brown */
-            --bg-button-hover: #7a5f4a; /* Darker brown */
-            --bg-result: #faf6f2; /* Slightly off-white for result */
-            --text-primary: #4a3f35; /* Dark brown text */
-            --text-secondary: #7a6f65; /* Lighter brown text */
-            --text-link: #b58a6d; /* Muted link color */
-            --text-button: #ffffff; /* White text on buttons */
-            --border-color: #dcd0c4; /* Light border */
-            --border-focus: #b58a6d;
-            --shadow-color: rgba(74, 63, 53, 0.1);
-            --error-color: #c86a6f; /* Muted red */
-            --gradient-bg: linear-gradient(135deg, #f4e9e1 0%, #e9d8c8 100%); /* Subtle gradient background */
+        :root {
+            --bg-color: #1a1a2e; /* 深夜藍 */
+            --panel-bg: #24243e; /* 稍淺的藍紫色面板 */
+            --primary-text: #e0e0e0; /* 柔和的白色文字 */
+            --secondary-text: #a0a0c0; /* 淡紫色輔助文字 */
+            --accent-color: #7a6eaa; /* 紫色調，用於按鈕和強調 */
+            --accent-hover: #9a8ebb; /* 按鈕懸停 */
+            --border-color: #40405c; /* 邊框顏色 */
+            --input-bg: #1e1e36;
+            --result-bg: #1e1e36;
+            --error-bg: #4a2a3a;
+            --error-border: #c86a6f;
+            --link-color: #9fa8da;
+            --footer-text: #8080a0;
         }
 
         body {
-            font-family: 'Noto Serif TC', '微軟正黑體', serif; /* Serif font for a touch of elegance */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
-            min-height: 100vh;
-            margin: 0;
-            background: var(--gradient-bg);
-            color: var(--text-primary);
-            padding: 20px; /* Add padding around the container */
-            box-sizing: border-box;
-        }
-
-        #main-container {
-            background-color: var(--bg-panel);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px var(--shadow-color);
-            padding: 40px;
-            max-width: 700px; /* Adjust max width */
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 30px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-
-        header .title-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px; /* Space between title and icon */
-            margin-bottom: 5px; /* Adjust spacing */
-        }
-
-        header h1 {
-            margin-bottom: 0; /* Remove default margin */
-            font-size: 2.2em; /* Slightly adjust size if needed */
-        }
-
-        header .instagram-link {
-            display: inline-flex; /* Align icon nicely */
-            vertical-align: middle;
-            color: var(--text-primary); /* Icon color */
-            transition: color 0.2s ease;
-        }
-
-        header .instagram-link:hover {
-            color: var(--text-link); /* Change color on hover */
-        }
-
-        header .instagram-icon {
-            width: 28px; /* Adjust icon size */
-            height: 28px;
-            margin-top: -3px; /* Fine-tune vertical alignment */
-        }
-
-        header .subtitle {
-            font-size: 1.5em; /* Style for subtitle */
-            color: var(--text-secondary);
-            margin-top: 5px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-
-        header p {
-            margin-top: 0;
-        }
-
-        #bazi-form {
-            display: grid;
-            /* Changed: Use a slightly wider min width and ensure consistent column creation */
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px; /* Keep gap */
-            margin-bottom: 30px;
-        }
-
-        .form-group {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            line-height: 1.7;
+            padding: 20px;
+            max-width: 750px;
+            margin: 30px auto;
             display: flex;
             flex-direction: column;
-            /* Added: Ensure consistent bottom margin for spacing */
-            margin-bottom: 5px;
+            min-height: calc(100vh - 40px); /* 計算高度以推動頁尾 */
         }
 
-        .form-group label {
+        main {
+            flex-grow: 1; /* 讓主內容區擴展 */
+        }
+
+        h1, h2 {
+            font-family: 'Noto Serif TC', serif;
+            color: var(--primary-text);
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        h1 {
+             font-size: 2.8em;
+             margin-bottom: 5px;
+             letter-spacing: 1px;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .container {
+            background-color: var(--panel-bg);
+            padding: 35px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+             font-size: 1.8em;
+             margin-bottom: 25px;
+             border-bottom: 1px solid var(--border-color);
+             padding-bottom: 10px;
+             color: var(--secondary-text);
+        }
+        label {
+            display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: bold;
+            color: var(--secondary-text);
             font-size: 0.95em;
         }
-        .form-group label .optional {
-             font-weight: 400;
-             font-style: italic;
-             font-size: 0.9em;
-             color: #aaa;
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 12px 15px;
+        input[type="date"],
+        input[type="time"],
+        input[type="text"] {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 18px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1em;
-            background-color: var(--bg-input);
-            color: var(--text-primary);
-            font-family: inherit;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 6px;
             box-sizing: border-box;
-            /* Added: Ensure consistent height */
-            height: 48px; /* Example height, adjust as needed */
-            width: 100%; /* Make elements fill their grid cell */
+            background-color: var(--input-bg);
+            color: var(--primary-text);
+            font-size: 1em;
         }
-
-        .form-group input::placeholder {
-            color: #b0a59c; /* Placeholder color */
-            opacity: 0.8;
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8); /* 讓日期選擇圖標在深色背景下可見 */
         }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(181, 138, 109, 0.15);
+        small {
+            display: block;
+            color: var(--secondary-text);
+            font-size: 0.85em;
+            margin-top: -10px;
+            margin-bottom: 15px;
         }
-
-        #submitButton {
-            grid-column: 1 / -1; /* Span across all columns */
-            padding: 15px 30px;
-            background-color: var(--bg-button);
-            color: var(--text-button);
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            gap: 20px; /* 按鈕間距 */
+        }
+        button {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 13px 22px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            margin-top: 15px; /* Add some space above button */
-            height: auto; /* Reset height for button */
+            font-size: 1.05em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            flex-grow: 1;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
-
-        #submitButton:hover {
-            background-color: var(--bg-button-hover);
+        button:hover {
+            background-color: var(--accent-hover);
             transform: translateY(-2px);
         }
-
-        #submitButton:disabled {
-            background-color: #c5b8ad; /* Lighter disabled color */
+        button:disabled {
+            background-color: #555;
+            color: #999;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
-
-        #result-area {
-            margin-top: 35px;
+        #results, #ai-results {
+            margin-top: 30px;
             padding: 25px;
-            background-color: var(--bg-result);
-            border-radius: 8px;
+            background-color: var(--panel-bg);
             border: 1px solid var(--border-color);
-            min-height: 100px; /* Ensure it has some height initially */
-            display: none; /* Hidden initially */
-            line-height: 1.7;
-            white-space: pre-wrap; /* Preserve line breaks from API */
+            border-radius: 12px;
+            animation: fadeIn 0.5s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-
-        #result-area h3 {
+        #results h3, #ai-results h3 {
             margin-top: 0;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-            font-size: 1.4em;
+            color: var(--primary-text);
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 1.6em;
         }
-
-        .loading-indicator {
-            text-align: center;
+        .result-section {
+            margin-bottom: 20px;
             padding: 15px;
-            font-size: 1em;
-            color: var(--text-secondary);
-            display: none; /* Hidden initially */
+            border-left: 4px solid var(--accent-color);
+            background-color: var(--result-bg);
+            border-radius: 6px;
         }
-        .loading-indicator.active {
+        .result-section h4 {
+             margin-top: 0;
+             margin-bottom: 15px;
+             color: var(--secondary-text);
+             font-size: 1.2em;
+             font-family: 'Noto Serif TC', serif;
+        }
+        .result-section p {
+            margin: 8px 0;
+            color: var(--primary-text);
+        }
+        .hexagram-details p {
+            margin-left: 18px;
+            font-size: 0.95em;
+            color: var(--secondary-text);
+            line-height: 1.5;
+        }
+        .hexagram-details strong { color: var(--primary-text); }
+        .hexagram-details .meaning { font-style: italic; }
+        .hexagram-details .element { font-weight: bold; color: var(--accent-hover); }
+        .hexagram-details .direction { color: var(--secondary-text); }
+        .element-analysis p {
+             margin: 5px 0;
+             font-size: 0.95em;
+        }
+        hr {
+            border: none;
+            border-top: 1px dashed var(--border-color);
+            margin: 15px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: var(--secondary-text);
+            font-size: 1.1em;
+        }
+        .error {
+            color: #ffcdd2;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #results, #ai-results {
+            display: none;
+        }
+        #results.visible, #ai-results.visible {
             display: block;
         }
-        .error-message {
-             color: var(--error-color);
-             font-weight: 600;
-             margin-top: 10px;
-             text-align: center;
-             display: none; /* Hidden initially */
-             padding: 10px;
-             background-color: rgba(200, 106, 111, 0.05);
-             border: 1px solid rgba(200, 106, 111, 0.2);
-             border-radius: 5px;
-        }
-        .error-message.active {
-            display: block;
-        }
 
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            #main-container {
-                padding: 25px;
-                margin-top: 15px;
-            }
-            header h1 {
-                font-size: 2em;
-            }
-            #bazi-form {
-                 grid-template-columns: 1fr; /* Stack elements on smaller screens */
-                 gap: 15px; /* Adjust gap for single column */
-            }
-            #submitButton {
-                 font-size: 1em;
-            }
-            .year-input-group {
-                flex-direction: column; /* Stack year input/select on small screens */
-                gap: 10px;
-                align-items: stretch; /* Make items fill width */
-            }
-            .year-select-helper {
-                width: 100%; /* Make select full width on small screens */
-            }
-            .form-group input, .form-group select {
-                height: 45px; /* Slightly smaller height on mobile */
-            }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--footer-text);
+            font-size: 0.9em;
+            line-height: 1.6;
         }
-
-        /* Style for the year input group */
-        .year-input-group {
-            display: flex;
-            align-items: center; /* Vertically align items */
-            gap: 10px; /* Space between input and select */
+        .footer p {
+            margin: 5px 0;
         }
-
-        #birthYear {
-            /* flex-grow: 1; */ /* Allow input to take available space - REMOVED, let grid handle width */
-            /* Changed: Set a more specific width for better control */
-            width: calc(65% - 5px); /* Adjust percentage and gap compensation */
+        .footer a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
         }
-
-        .year-select-helper {
-            padding: 12px 10px; /* Adjust padding if needed */
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.95em; /* Slightly smaller font */
-            background-color: var(--bg-input);
-            color: var(--text-secondary);
-            font-family: inherit;
-            cursor: pointer;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            /* flex-shrink: 0; */ /* Prevent select from shrinking too much - REMOVED, let grid handle width */
-            /* Changed: Set a more specific width for better control */
-            width: calc(35% - 5px); /* Adjust percentage and gap compensation */
+        .footer a:hover {
+            color: var(--accent-hover);
         }
-
-        .year-select-helper:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(181, 138, 109, 0.15);
+        .footer strong {
+            color: var(--secondary-text);
         }
-
-         /* Markdown formatting for results (optional, if API returns markdown) */
-        #result-content strong {
-             font-weight: 600;
-             color: var(--text-primary);
-        }
-         #result-content ul,
-         #result-content ol {
-             padding-left: 25px;
-             margin-top: 10px;
-             margin-bottom: 10px;
-         }
-         #result-content li {
-             margin-bottom: 8px;
-         }
-         #result-content code {
-             background-color: rgba(74, 63, 53, 0.05);
-             padding: 0.2em 0.4em;
+        .donation-address {
+             word-break: break-all; /* 防止地址溢出 */
+             background-color: var(--input-bg);
+             padding: 5px 8px;
              border-radius: 4px;
-             font-family: 'Consolas', 'Courier New', monospace;
-             font-size: 0.9em;
-             border: 1px solid rgba(74, 63, 53, 0.1);
-         }
+             margin-top: 3px;
+             display: inline-block;
+             font-family: monospace;
+             font-size: 0.95em;
+        }
 
     </style>
-    <!-- 引入 Marked.js (如果需要渲染 Markdown) -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
-    <!-- 引入 DOMPurify (如果需要渲染 HTML) -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js"></script> -->
 </head>
 <body>
-    <div id="main-container">
-        <header>
-            <div class="title-container">
-                <h1>隨意做 SUIYI ZUO</h1>
-                <a href="https://www.instagram.com/suiyi.zuo?igsh=MWx3MjV4eDZscWluMg==" target="_blank" rel="noopener noreferrer" class="instagram-link" aria-label="Instagram">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="instagram-icon">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37a4 4 0 1 1-4.72-4.72A4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                </a>
-            </div>
-            <h2 class="subtitle">AI五行 X 手串補氣</h2>
-            <p>輸入您的出生資訊，透過 AI 分析您的八字五行，找出需要補強的部分，並推薦適合的水晶手串來為您增添好運氣！</p>
-        </header>
+    <main>
+        <h1>HexAI</h1>
+        <p class="subtitle">The voice of the hexagrams, interpreted by AI.<br>（卦象之語，由 AI 解讀）</p>
 
-        <form id="bazi-form">
-            <div class="form-group">
-                <label for="birthYear">西元年 (必填)</label>
-                <div class="year-input-group">
-                    <input type="number" id="birthYear" name="birthYear" placeholder="例如 1990" required min="1920" max="2099">
-                    <select id="birthYearSelect" class="year-select-helper">
-                        <option value="" disabled selected>-- 或由此快速選擇 --</option>
-                        <!-- Options will be populated by JS -->
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="birthMonth">月 (必填)</label>
-                <select id="birthMonth" name="birthMonth" required>
-                    <option value="" disabled selected>請選擇月份</option>
-                    <!-- Options will be populated by JS -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="birthDay">日 (必填)</label>
-                <select id="birthDay" name="birthDay" required>
-                    <option value="" disabled selected>請選擇日期</option>
-                    <!-- Options will be populated by JS -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="birthTimeSelect">出生時辰 <span class="optional">(選填)</span></label>
-                <select id="birthTimeSelect" name="birthTimeSelect">
-                    <option value="" selected>不確定 / 未知時辰</option>
-                    <option value="2300">子時 (23:00 - 00:59)</option>
-                    <option value="0100">丑時 (01:00 - 02:59)</option>
-                    <option value="0300">寅時 (03:00 - 04:59)</option>
-                    <option value="0500">卯時 (05:00 - 06:59)</option>
-                    <option value="0700">辰時 (07:00 - 08:59)</option>
-                    <option value="0900">巳時 (09:00 - 10:59)</option>
-                    <option value="1100">午時 (11:00 - 12:59)</option>
-                    <option value="1300">未時 (13:00 - 14:59)</option>
-                    <option value="1500">申時 (15:00 - 16:59)</option>
-                    <option value="1700">酉時 (17:00 - 18:59)</option>
-                    <option value="1900">戌時 (19:00 - 20:59)</option>
-                    <option value="2100">亥時 (21:00 - 22:59)</option>
-                </select>
-                <!-- <input type="text" id="birthTime" name="birthTime" placeholder="例如 1430 (下午 2:30)" pattern="^(?:[01]\d|2[0-3])[0-5]\d$" title="請輸入四位數字時間，例如 0915 或 2300"> -->
-            </div>
-            <div class="form-group">
-                 <label for="birthLocation">出生地點 <span class="optional">(選填)</span></label>
-                 <input type="text" id="birthLocation" name="birthLocation" placeholder="例如 台北市、高雄市">
-             </div>
+        <div class="container">
+            <h2>輸入資訊</h2>
+            <label for="date">選擇日期:</label>
+            <input type="date" id="date" name="date" required>
 
-            <button type="submit" id="submitButton">幫我補氣</button>
-        </form>
+            <label for="time">選擇時間:</label>
+            <input type="time" id="time" name="time">
+            <small>（若不選擇，則以子時 00:00 計算）</small>
 
-        <div class="loading-indicator" id="loading">正在為您分析五行命盤，請稍候... ✨</div>
-        <div class="error-message" id="error"></div>
+            <label for="extra-input">額外輸入 (可選):</label>
+            <input type="text" id="extra-input" name="extra-input" placeholder="輸入數字 (0-9) 或字母 (A-Z)">
+            <small>（用於額外動爻分析，例如測字、數字等）</small>
 
-        <div id="result-area">
-            <h3>分析結果與建議</h3>
-            <div id="result-content">
-                <!-- AI analysis result will appear here -->
+            <div class="button-container">
+                <button id="calculate-basic">立即起卦</button>
+                <button id="calculate-ai">AI 深入解讀</button>
             </div>
         </div>
 
-    </div>
+        <!-- 基礎計算結果顯示區域 -->
+        <div id="results">
+            <h3>基礎卦象結果</h3>
+            <div id="basic-info" class="result-section">
+                <p><strong>公曆時間:</strong> <span id="gregorian-datetime"></span></p>
+                <p><strong>農曆日期:</strong> <span id="lunar-result"></span></p>
+                <p><strong>占卜時辰:</strong> <span id="dizhi-result"></span></p>
+            </div>
+            <div id="san-tran-results" class="result-section">
+                <h4>三傳詳解</h4>
+                <div id="first-hexagram">
+                    <p><strong>初傳: <span class="number"></span> (<span class="name"></span>)</strong></p>
+                    <div class="hexagram-details">
+                        <p><strong class="meaning">意象：</strong><span></span></p>
+                        <p><strong class="element">屬性：</strong><span></span></p>
+                        <p><strong class="direction">方位：</strong><span></span></p>
+                        <p><strong class="description">解析：</strong><span></span></p>
+                    </div>
+                </div>
+                <hr>
+                <div id="second-hexagram">
+                    <p><strong>中傳: <span class="number"></span> (<span class="name"></span>)</strong></p>
+                    <div class="hexagram-details">
+                        <p><strong class="meaning">意象：</strong><span></span></p>
+                        <p><strong class="element">屬性：</strong><span></span></p>
+                        <p><strong class="direction">方位：</strong><span></span></p>
+                        <p><strong class="description">解析：</strong><span></span></p>
+                    </div>
+                </div>
+                <hr>
+                <div id="third-hexagram">
+                    <p><strong>末傳: <span class="number"></span> (<span class="name"></span>)</strong></p>
+                    <div class="hexagram-details">
+                        <p><strong class="meaning">意象：</strong><span></span></p>
+                        <p><strong class="element">屬性：</strong><span></span></p>
+                        <p><strong class="direction">方位：</strong><span></span></p>
+                        <p><strong class="description">解析：</strong><span></span></p>
+                    </div>
+                </div>
+            </div>
+            <div id="extra-hexagrams-container" class="result-section" style="display: none;">
+                <h4>額外分析</h4>
+                <div id="extra-hexagram-details">
+                    <!-- 額外卦象會動態加載到這裡 -->
+                </div>
+            </div>
+            <div id="element-analysis-container" class="result-section">
+                <h4>五行關係</h4>
+                <div id="element-analysis" class="element-analysis">
+                    <!-- 五行分析會動態加載到這裡 -->
+                </div>
+            </div>
+            <div id="error-message" class="error" style="display: none;"></div>
+        </div>
 
+        <!-- AI 解讀結果顯示區域 -->
+        <div id="ai-results">
+            <h3>AI 深入解讀</h3>
+            <div id="ai-interpretation" class="result-section">
+                <div class="loading" style="display: none;">正在請求 AI 解讀中... 請稍候...</div>
+                <div id="ai-content"></div>
+                <div id="ai-error-message" class="error" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p><strong>關於作者</strong></p>
+        <p>製作者: PONY</p>
+        <p>聯絡信箱: <a href="mailto:liupony2000@gmail.com">liupony2000@gmail.com</a></p>
+        <p>特別感謝 荀爽 教學啟發</p>
+        <br>
+        <p><strong>支持創作</strong></p>
+        <p>如果您喜歡 HexAI，可以考慮透過以下方式支持持續開發：</p>
+        <p>USDT (TRC20): <span class="donation-address">TExxw25EaPKZdKr9uPJT8MLV2zHrQBbhQg</span></p>
+        <p>多幣錢包 (X Payments): <span class="donation-address">liupony2000.x</span></p>
+        <p>台灣帳戶: <strong>812 (台新銀行)</strong> <span class="donation-address">20051021151002</span></p>
+    </footer>
+
+    <script src="lunar.js"></script>
+    <script src="calendar.js"></script>
     <script>
-        const form = document.getElementById('bazi-form');
-        const yearInput = document.getElementById('birthYear');
-        const monthSelect = document.getElementById('birthMonth');
-        const daySelect = document.getElementById('birthDay');
-        const timeSelect = document.getElementById('birthTimeSelect');
-        const locationInput = document.getElementById('birthLocation');
-        const submitButton = document.getElementById('submitButton');
-        const loadingIndicator = document.getElementById('loading');
-        const errorDisplay = document.getElementById('error');
-        const resultArea = document.getElementById('result-area');
-        const resultContent = document.getElementById('result-content');
-        const yearSelect = document.getElementById('birthYearSelect'); // Get the year select element
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendar = new ChineseCalendar();
 
-        // --- Populate Year, Month and Day Selectors --- //
-        function populateYears() {
-            const currentYear = new Date().getFullYear();
-            const startYear = 1920;
-            for (let i = currentYear; i >= startYear; i--) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i} 年`;
-                yearSelect.appendChild(option);
-            }
-        }
+            // 獲取 DOM 元素
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+            const extraInput = document.getElementById('extra-input');
+            const calculateBasicButton = document.getElementById('calculate-basic');
+            const calculateAiButton = document.getElementById('calculate-ai');
 
-        function populateMonths() {
-            for (let i = 1; i <= 12; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i} 月`;
-                monthSelect.appendChild(option);
-            }
-        }
+            const resultsDiv = document.getElementById('results');
+            const aiResultsDiv = document.getElementById('ai-results');
+            const gregorianDatetimeSpan = document.getElementById('gregorian-datetime');
+            const lunarResultSpan = document.getElementById('lunar-result');
+            const dizhiResultSpan = document.getElementById('dizhi-result');
+            const errorMessageDiv = document.getElementById('error-message');
+            const aiErrorMessageDiv = document.getElementById('ai-error-message');
+            const aiLoadingDiv = aiResultsDiv.querySelector('.loading');
+            const aiContentDiv = document.getElementById('ai-content');
 
-        function populateDays(daysInMonth) {
-            daySelect.innerHTML = '<option value="" disabled selected>請選擇日期</option>'; // Clear existing options
-            for (let i = 1; i <= daysInMonth; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i} 日`;
-                daySelect.appendChild(option);
-            }
-        }
+            const firstHexagramDiv = document.getElementById('first-hexagram');
+            const secondHexagramDiv = document.getElementById('second-hexagram');
+            const thirdHexagramDiv = document.getElementById('third-hexagram');
 
-        // Initial population
-        populateYears(); // Populate years on load
-        populateMonths();
-        populateDays(31); // Default to 31 days
+            const extraHexagramsContainer = document.getElementById('extra-hexagrams-container');
+            const extraHexagramDetailsDiv = document.getElementById('extra-hexagram-details');
+            const elementAnalysisContainer = document.getElementById('element-analysis-container');
+            const elementAnalysisDiv = document.getElementById('element-analysis');
 
-        // --- Event Listener for Year Select --- //
-        yearSelect.addEventListener('change', () => {
-            if (yearSelect.value) {
-                yearInput.value = yearSelect.value; // Update input when select changes
-            }
-        });
+            console.log('DOM Elements loaded and variables assigned.');
 
-        // --- Dynamic Day Population (Optional Enhancement) --- //
-        // You could add logic here to change days based on selected month/year
-        // monthSelect.addEventListener('change', () => {
-        //     const year = parseInt(yearInput.value) || new Date().getFullYear();
-        //     const month = parseInt(monthSelect.value);
-        //     if (month) {
-        //         const days = new Date(year, month, 0).getDate(); // Get days in selected month
-        //         populateDays(days);
-        //     }
-        // });
-        // yearInput.addEventListener('change', () => { /* similar logic if year changes */ });
-
-
-        // --- Form Submission Logic --- //
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Prevent default form submission
-
-            // Clear previous results and errors
-            resultArea.style.display = 'none';
-            resultContent.textContent = '';
-            errorDisplay.textContent = '';
-            errorDisplay.classList.remove('active');
-            loadingIndicator.classList.add('active');
-            submitButton.disabled = true;
-
-            // Get form data
-            const formData = {
-                year: yearInput.value,
-                month: monthSelect.value,
-                day: daySelect.value,
-                time: timeSelect.value || null,
-                location: locationInput.value.trim() || null
-            };
-
-             console.log("Submitting data:", formData);
-
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
-                console.log("Received response from backend:", result);
-
-                 if (!response.ok || (result.choices && result.choices[0].finish_reason === 'error')) {
-                    // Handle errors returned from the worker (both network and application errors)
-                    const errorMessage = result.choices && result.choices[0].message && result.choices[0].message.content
-                                        ? result.choices[0].message.content
-                                        : (result.error || `請求失敗，狀態碼: ${response.status}`);
-                    throw new Error(errorMessage);
-                 }
-
-                // Display success result
-                if (result.choices && result.choices[0] && result.choices[0].message && result.choices[0].message.content) {
-                    const analysisText = result.choices[0].message.content;
-                    // Directly display the text, assuming it's pre-formatted
-                    resultContent.textContent = analysisText;
-                    // If using Marked.js for Markdown:
-                    // resultContent.innerHTML = DOMPurify.sanitize(marked.parse(analysisText));
-                    resultArea.style.display = 'block';
+            // --- 輔助函數 ---
+            function showError(message, isAiError = false) {
+                const targetDiv = isAiError ? aiErrorMessageDiv : errorMessageDiv;
+                const targetContainer = isAiError ? aiResultsDiv : resultsDiv;
+                targetDiv.textContent = message;
+                targetDiv.style.display = 'block';
+                targetContainer.classList.add('visible'); // Ensure container is visible to show error
+                // Optionally hide the other container
+                if (isAiError) {
+                   // resultsDiv.classList.remove('visible'); // Keep basic visible? Decide UX
                 } else {
-                     throw new Error("從伺服器收到的回應格式不正確。");
+                    aiResultsDiv.classList.remove('visible');
+                }
+            }
+
+            function clearErrors() {
+                errorMessageDiv.style.display = 'none';
+                errorMessageDiv.textContent = '';
+                aiErrorMessageDiv.style.display = 'none';
+                aiErrorMessageDiv.textContent = '';
+            }
+
+            function setLoading(isLoading, isAiLoading = false) {
+                 if (isAiLoading) {
+                    aiLoadingDiv.style.display = isLoading ? 'block' : 'none';
+                    calculateAiButton.disabled = isLoading;
+                    calculateBasicButton.disabled = isLoading;
+                 } else {
+                     calculateBasicButton.disabled = isLoading;
+                     // Decide if basic calculation should disable AI button too
+                     // calculateAiButton.disabled = isLoading;
+                 }
+            }
+
+            function updateHexagramDisplay(divElement, passData) {
+                if (!divElement) {
+                    console.error("Target divElement is null for updateHexagramDisplay");
+                    return;
+                }
+                try {
+                    if (!passData || !passData.number || !calendar.hexagramDetails[passData.number]) {
+                        console.error("Invalid passData for updateHexagramDisplay", passData);
+                        divElement.querySelector('.number').textContent = '錯誤';
+                        divElement.querySelector('.name').textContent = '數據無效';
+                        divElement.querySelector('.meaning span').textContent = 'N/A';
+                        divElement.querySelector('.element span').textContent = 'N/A';
+                        divElement.querySelector('.direction span').textContent = 'N/A';
+                        divElement.querySelector('.description span').textContent = '無法獲取詳細信息。';
+                        return;
+                    }
+                    const details = calendar.hexagramDetails[passData.number];
+                    // Check if selectors find elements before setting textContent
+                    const numberSpan = divElement.querySelector('.number');
+                    const nameSpan = divElement.querySelector('.name');
+                    const meaningSpan = divElement.querySelector('.meaning + span');
+                    const elementSpan = divElement.querySelector('.element + span');
+                    const directionSpan = divElement.querySelector('.direction + span');
+                    const descriptionSpan = divElement.querySelector('.description + span');
+
+                    if (numberSpan) numberSpan.textContent = passData.number;
+                    if (nameSpan) nameSpan.textContent = passData.name;
+                    if (meaningSpan) meaningSpan.textContent = details.meaning;
+                    if (elementSpan) elementSpan.textContent = details.element;
+                    if (directionSpan) directionSpan.textContent = details.direction;
+                    if (descriptionSpan) descriptionSpan.textContent = details.description;
+                } catch (e) {
+                    console.error("Error updating hexagram display:", e, "for element:", divElement);
+                }
+            }
+
+            function updateExtraResultsDisplay(extraResults) {
+                extraHexagramDetailsDiv.innerHTML = ''; // 清空舊結果
+                if (extraResults && extraResults.length > 0) {
+                    extraResults.forEach((result, index) => {
+                         if (!result || !result.details) {
+                            console.error(`Invalid extra result at index ${index}:`, result);
+                            return;
+                        }
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'hexagram-result-item'; // Use a more specific class if needed
+                        resultDiv.innerHTML = `
+                            <p><strong>額外 ${index + 1}: ${result.number} (${result.name})</strong></p>
+                            <div class="hexagram-details">
+                                <p><strong class="meaning">意象：</strong>${result.details.meaning}</p>
+                                <p><strong class="element">屬性：</strong>${result.details.element}</p>
+                                <p><strong class="direction">方位：</strong>${result.details.direction}</p>
+                                <p><strong class="description">解析：</strong>${result.details.description}</p>
+                            </div>
+                            ${index < extraResults.length - 1 ? '<hr>' : ''}
+                        `;
+                        extraHexagramDetailsDiv.appendChild(resultDiv);
+                    });
+                    extraHexagramsContainer.style.display = 'block';
+                } else {
+                    extraHexagramsContainer.style.display = 'none';
+                }
+            }
+
+             function updateElementAnalysisDisplay(analysis) {
+                elementAnalysisDiv.innerHTML = ''; // 清空
+                if (analysis && analysis.length > 0) {
+                    analysis.forEach(item => {
+                        if (!item || !item.from || !item.relation || !item.to) {
+                             console.warn("Skipping invalid element analysis item:", item);
+                             return;
+                        }
+                        const p = document.createElement('p');
+                        // Example: 初傳 (木) 生 中傳 (火)
+                        p.textContent = `${item.from} ${item.relation} ${item.to}`;
+                        elementAnalysisDiv.appendChild(p);
+                    });
+                     elementAnalysisContainer.style.display = 'block';
+                } else {
+                     elementAnalysisContainer.style.display = 'none';
+                }
+            }
+
+            // --- 主要計算邏輯函數 ---
+            function performCalculation() {
+                console.log('performCalculation started');
+                clearErrors();
+                resultsDiv.classList.remove('visible'); // Hide results initially
+                aiResultsDiv.classList.remove('visible');
+
+                const dateStr = dateInput.value;
+                if (!dateStr) {
+                    showError('請選擇日期');
+                    return null;
                 }
 
-            } catch (error) {
-                console.error('分析請求失敗:', error);
-                errorDisplay.textContent = `錯誤：${error.message}`; // Display the error message
-                errorDisplay.classList.add('active');
-            } finally {
-                loadingIndicator.classList.remove('active');
-                submitButton.disabled = false;
-            }
-        });
+                const timeStr = timeInput.value || '00:00';
+                let inputDateTime;
+                try {
+                     // Try to parse the date and time
+                    inputDateTime = new Date(`${dateStr}T${timeStr}`);
+                    if (isNaN(inputDateTime.getTime())) {
+                       throw new Error('無效的日期或時間格式');
+                    }
+                } catch (e) {
+                     showError('解析日期或時間時出錯: ' + e.message);
+                     return null;
+                }
 
+                try {
+                    // Format display *after* validation
+                    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Taipei' }; // Example timezone
+                    try {
+                        gregorianDatetimeSpan.textContent = inputDateTime.toLocaleString('zh-Hant', options);
+                    } catch (e) {
+                         console.warn("Could not format date with timezone, using default locale string:", e);
+                         gregorianDatetimeSpan.textContent = inputDateTime.toLocaleString('zh-Hant');
+                    }
+
+
+                    const hour = inputDateTime.getHours();
+                    const dizhi = calendar.getDizhiHour(hour);
+                    if (!dizhi) {
+                         showError('無法確定占卜時辰');
+                         return null;
+                    }
+
+                    const lunar = calendar.getLunarDate(inputDateTime);
+                     if (!lunar || lunar.month === -1) {
+                         showError('無法計算農曆日期，請檢查輸入日期是否在 1900-2200 範圍內。 或 Lunar.js 未載入。');
+                         return null;
+                     }
+
+                    const sanTran = calendar.calculateSanTran(lunar.month, lunar.day, dizhi.num);
+                    if (!sanTran) {
+                        showError('計算三傳時出錯');
+                        return null;
+                    }
+
+                    const extraInputValue = extraInput.value.trim();
+                    let extraResults = [];
+                    if (extraInputValue) {
+                        extraResults = calendar.calculateExtraHexagrams(
+                            extraInputValue,
+                            sanTran.third.number
+                        );
+                         if (!Array.isArray(extraResults)) {
+                             console.error("calculateExtraHexagrams did not return an array:", extraResults);
+                             extraResults = [];
+                             showError("計算額外分析時發生內部錯誤。");
+                         }
+                    }
+
+                    // Update displays only after all calculations succeed
+                    lunarResultSpan.textContent = `農曆 ${lunar.month} 月 ${lunar.day} 日 ${lunar.isLeap ? '(閏)' : ''}`;
+                    dizhiResultSpan.textContent = `${dizhi.name} (${String(dizhi.start).padStart(2,'0')}:00 - ${dizhi.end === 1 ? '00:59' : String(dizhi.end - 1).padStart(2,'0') + ':59'})`; // Corrected end time display
+
+                    updateHexagramDisplay(firstHexagramDiv, sanTran.first);
+                    updateHexagramDisplay(secondHexagramDiv, sanTran.second);
+                    updateHexagramDisplay(thirdHexagramDiv, sanTran.third);
+                    updateExtraResultsDisplay(extraResults);
+
+                    const elementAnalysis = calendar.analyzeElements(sanTran.first.number, sanTran.second.number, sanTran.third.number);
+                    updateElementAnalysisDisplay(elementAnalysis);
+
+                    resultsDiv.classList.add('visible'); // Show results section
+
+                    return {
+                        gregorianDate: dateStr,
+                        gregorianTime: timeStr,
+                        lunarDate: `${lunar.month}月${lunar.day}日 ${lunar.isLeap ? '(閏)' : ''}`,
+                        dizhiHour: dizhi.name,
+                        sanTran: sanTran,
+                        extraResults: extraResults,
+                        elementAnalysis: elementAnalysis,
+                        rawInput: {
+                             date: dateStr,
+                             time: timeStr,
+                             extra: extraInputValue
+                        }
+                    };
+                } catch (error) {
+                    console.error('計算錯誤:', error);
+                    showError('計算過程中發生錯誤: ' + error.message);
+                    return null;
+                }
+            }
+
+            // --- 事件監聽器 ---
+             if (!calculateBasicButton) {
+                 console.error('Could not find the calculate-basic button!');
+             } else {
+                 console.log('Adding event listener to calculate-basic button.');
+                 calculateBasicButton.addEventListener('click', () => {
+                     console.log('calculate-basic button clicked!');
+                     setLoading(true);
+                     aiResultsDiv.classList.remove('visible');
+                     aiContentDiv.innerHTML = '';
+                     clearErrors(); // Clear previous errors before new calculation
+
+                     setTimeout(() => {
+                          try {
+                              performCalculation();
+                          } catch(e) {
+                               console.error("Error inside basic calculation timeout:", e);
+                               showError('執行基礎計算時發生意外錯誤: ' + e.message);
+                          } finally {
+                              setLoading(false);
+                          }
+                      }, 10);
+                 });
+             }
+
+             if (!calculateAiButton) {
+                 console.error('Could not find the calculate-ai button!');
+             } else {
+                 console.log('Adding event listener to calculate-ai button.');
+                 calculateAiButton.addEventListener('click', async () => {
+                     console.log('calculate-ai button clicked!');
+                     setLoading(true, true);
+                     aiContentDiv.innerHTML = '';
+                     clearErrors();
+
+                     let calculationResult = null;
+                     try {
+                         calculationResult = performCalculation(); // This also updates basic display
+                     } catch (e) {
+                         console.error("Error during performCalculation for AI:", e);
+                         // Error already shown by performCalculation
+                         setLoading(false, true);
+                         return;
+                     }
+
+                     if (!calculationResult) {
+                         console.log('performCalculation returned null, stopping AI request.');
+                         setLoading(false, true);
+                         return;
+                     }
+
+                     console.log('Preparing prompt for AI...');
+                    let promptContext = `請根據以下三傳占卜的結果，提供一個詳細、綜合性的解讀，語氣溫和專業，使用繁體中文。\n\n`;
+                    promptContext += `占卜時間：公曆 ${calculationResult.rawInput.date} ${calculationResult.rawInput.time} (農曆 ${calculationResult.lunarDate} ${calculationResult.dizhiHour})\n`;
+                    promptContext += `三傳結果：\n`;
+                    promptContext += `- 初傳：${calculationResult.sanTran.first.number} (${calculationResult.sanTran.first.name}) - ${calendar.hexagramDetails[calculationResult.sanTran.first.number].meaning}\n`;
+                    promptContext += `- 中傳：${calculationResult.sanTran.second.number} (${calculationResult.sanTran.second.name}) - ${calendar.hexagramDetails[calculationResult.sanTran.second.number].meaning}\n`;
+                    promptContext += `- 末傳：${calculationResult.sanTran.third.number} (${calculationResult.sanTran.third.name}) - ${calendar.hexagramDetails[calculationResult.sanTran.third.number].meaning}\n\n`;
+
+                    promptContext += `五行關係：\n`;
+                    calculationResult.elementAnalysis.forEach(item => {
+                        promptContext += `- ${item.from} ${item.relation} ${item.to}\n`;
+                    });
+                    promptContext += `\n`;
+
+                    if (calculationResult.extraResults.length > 0) {
+                        promptContext += `額外分析 (基於輸入 \"${calculationResult.rawInput.extra}\")：\n`;
+                        calculationResult.extraResults.forEach((res, i) => {
+                            promptContext += `- 額外 ${i + 1}：${res.number} (${res.name}) - ${res.details.meaning}\n`;
+                        });
+                        promptContext += `\n`;
+                    }
+
+                    promptContext += `請基於以上所有信息進行解讀。`;
+
+                    console.log('Sending request to /api/interpret...');
+                    aiResultsDiv.classList.add('visible');
+                    aiLoadingDiv.style.display = 'block'; // Explicitly show loading here
+                    aiContentDiv.innerHTML = ''; // Ensure content is clear while loading
+
+                     try {
+                        const response = await fetch('/api/interpret', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ prompt: promptContext }),
+                        });
+
+                        const responseBody = await response.text(); // Get raw response first
+                        console.log("Raw AI Response Body:", responseBody);
+
+                        let data;
+                        try {
+                            data = JSON.parse(responseBody); // Try parsing as JSON
+                        } catch (parseError) {
+                             console.error("Failed to parse AI response as JSON:", parseError);
+                             showError(`AI 服務回應格式錯誤，無法解析: ${responseBody.substring(0, 100)}...`, true);
+                             return; // Stop further processing
+                        }
+
+                        if (!response.ok) {
+                            const errorMsg = `AI 服務請求失敗: ${response.status} ${response.statusText}. ` +
+                                             `${(data?.error?.message || responseBody)}`;
+                            console.error('AI Request Error:', errorMsg);
+                            showError(errorMsg, true);
+                        } else {
+                             if (data.error) {
+                                 showError(`AI 服務返回錯誤: ${data.error.message || JSON.stringify(data.error)}`, true);
+                             } else if (data.interpretation) {
+                                // Replace newline characters with <br> for HTML display
+                                aiContentDiv.innerHTML = data.interpretation.replace(/\n/g, '<br>');
+                             } else {
+                                 showError('從 AI 服務收到的回應格式不正確 (缺少 interpretation 字段)。', true);
+                                 console.warn('Unexpected AI response format:', data);
+                             }
+                        }
+                    } catch (error) {
+                        console.error('請求 AI 解讀時出錯:', error);
+                        showError('無法連接到 AI 解讀服務，請檢查網絡或稍後再試。 ' + error.message, true);
+                    } finally {
+                        console.log('AI request finished or failed.');
+                        setLoading(false, true);
+                    }
+                 });
+            }
+
+             // 設置今天的日期為預設值
+             const today = new Date();
+             const yyyy = today.getFullYear();
+             const mm = String(today.getMonth() + 1).padStart(2, '0');
+             const dd = String(today.getDate()).padStart(2, '0');
+             try {
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+             } catch (e) {
+                 console.error("Error setting default date:", e);
+             }
+
+        });
     </script>
+
 </body>
 </html> 
