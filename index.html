@@ -271,14 +271,9 @@
             <input type="time" id="time" name="time">
             <small>（若不選擇，則以子時 00:00 計算）</small>
 
-            <label for="extra-input">額外輸入 (可選):</label>
-            <input type="text" id="extra-input" name="extra-input" placeholder="輸入數字 (0-9) 或字母 (A-Z)">
-            <small>（用於額外動爻分析，例如測字、數字等）</small>
-
-            <!-- 新增問題輸入框 -->
-            <label for="user-question">您想問的問題 (選填):</label>
-            <textarea id="user-question" name="user-question" rows="3" placeholder="請在此輸入您想針對本次占卜詢問的問題..."></textarea>
-            <small>（若留空，AI 將只針對卦象本身進行通用解讀）</small>
+            <label for="extra-input">您的問題 或 額外輸入 (選填):</label>
+            <input type="text" id="extra-input" name="extra-input" placeholder="輸入問題 或 數字/字母 (A-Z, 0-9)">
+            <small>（在此輸入想問的問題。若包含數字/字母，會同時進行額外分析。）</small>
 
             <div class="button-container">
                 <button id="calculate-basic">立即起卦</button>
@@ -375,7 +370,6 @@
             const dateInput = document.getElementById('date');
             const timeInput = document.getElementById('time');
             const extraInput = document.getElementById('extra-input');
-            const userQuestionTextarea = document.getElementById('user-question');
             const calculateBasicButton = document.getElementById('calculate-basic');
             const calculateAiButton = document.getElementById('calculate-ai');
 
@@ -674,17 +668,19 @@
                      }
 
                      console.log('Preparing prompt for AI...');
-                    // --- 新增：獲取使用者問題 ---
-                    const userQuestion = userQuestionTextarea.value.trim();
+                     // --- 修改：從 extraInput 獲取問題或額外輸入 ---
+                    const userQuestionOrExtraInput = extraInput.value.trim();
 
                     let promptContext = `請根據以下三傳占卜的結果`;
-                    if (userQuestion) {
-                        promptContext += `，並結合使用者提出的問題「${userQuestion}」`;
+                    if (userQuestionOrExtraInput) {
+                        // 在 Prompt 開頭明確指出要結合輸入內容進行解讀
+                        promptContext += `，並結合使用者輸入的內容「${userQuestionOrExtraInput}」(此內容可能包含問題或用於額外分析的字符)`;
                     }
                     promptContext += `，提供一個詳細、綜合性的解讀，語氣溫和專業，使用繁體中文。\n\n`;
 
-                    if (userQuestion) {
-                        promptContext += `使用者提問：${userQuestion}\n\n`; // 再次明確標示問題
+                    // 再次明確標示使用者輸入，無論是問題還是額外輸入
+                    if (userQuestionOrExtraInput) {
+                        promptContext += `使用者輸入內容：${userQuestionOrExtraInput}\n\n`;
                     }
 
                     promptContext += `占卜時間：公曆 ${calculationResult.rawInput.date} ${calculationResult.rawInput.time} (農曆 ${calculationResult.lunarDate} ${calculationResult.dizhiHour})\n`;
@@ -699,8 +695,9 @@
                     });
                     promptContext += `\n`;
 
+                    // 額外分析部分保持不變，如果 extraInput 包含有效字符，結果會在這裡列出
                     if (calculationResult.extraResults.length > 0) {
-                        promptContext += `額外分析 (基於輸入 \"${calculationResult.rawInput.extra}\")：\n`;
+                        promptContext += `基於使用者輸入內容中的數字/字母進行的額外分析：\n`; // 調整描述
                         calculationResult.extraResults.forEach((res, i) => {
                             promptContext += `- 額外 ${i + 1}：${res.number} (${res.name}) - ${res.details.meaning}\n`;
                         });

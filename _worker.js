@@ -103,8 +103,9 @@ async function handleApiRequest(request, env) {
 	const deepseekPayload = {
 		model: 'deepseek-chat', // 或者選擇其他合適的模型
 		messages: [
-			{ role: 'system', content: '你是一個精通三傳占卜和中華術數的專家。請根據使用者提供的占卜結果（包含三傳、五行關係、額外分析等）`並結合使用者可能提出的具體問題`，進行詳細、專業且易於理解的解讀。如果使用者沒有提問，則進行通用的卦象綜合解讀。請始終使用繁體中文回答。' },
-			{ role: 'user', content: userPrompt } // 將前端生成的 prompt 直接傳給 user role
+			// -- 再次調整 System Prompt 以適應雙重用途輸入 --
+			{ role: 'system', content: '你是一個精通三傳占卜和中華術數的專家。請根據使用者提供的占卜結果（包含三傳、五行關係等）`以及使用者輸入的內容`進行解讀。`使用者輸入的內容可能是一個具體問題，也可能包含用於額外分析的數字或字母。` 請結合所有信息（卦象結果、可能的額外分析結果、可能的使用者問題）給出詳細、專業且易於理解的解讀。如果使用者輸入內容明顯不是問題且沒有額外分析結果，則進行通用的卦象綜合解讀。請始終使用繁體中文回答。' },
+			{ role: 'user', content: userPrompt }
 		],
 		stream: false, // 設置為 false 以獲取完整的回應
 	};
