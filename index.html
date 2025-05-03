@@ -275,6 +275,11 @@
             <input type="text" id="extra-input" name="extra-input" placeholder="輸入數字 (0-9) 或字母 (A-Z)">
             <small>（用於額外動爻分析，例如測字、數字等）</small>
 
+            <!-- 新增問題輸入框 -->
+            <label for="user-question">您想問的問題 (選填):</label>
+            <textarea id="user-question" name="user-question" rows="3" placeholder="請在此輸入您想針對本次占卜詢問的問題..."></textarea>
+            <small>（若留空，AI 將只針對卦象本身進行通用解讀）</small>
+
             <div class="button-container">
                 <button id="calculate-basic">立即起卦</button>
                 <button id="calculate-ai">AI 深入解讀</button>
@@ -370,6 +375,7 @@
             const dateInput = document.getElementById('date');
             const timeInput = document.getElementById('time');
             const extraInput = document.getElementById('extra-input');
+            const userQuestionTextarea = document.getElementById('user-question');
             const calculateBasicButton = document.getElementById('calculate-basic');
             const calculateAiButton = document.getElementById('calculate-ai');
 
@@ -668,7 +674,19 @@
                      }
 
                      console.log('Preparing prompt for AI...');
-                    let promptContext = `請根據以下三傳占卜的結果，提供一個詳細、綜合性的解讀，語氣溫和專業，使用繁體中文。\n\n`;
+                    // --- 新增：獲取使用者問題 ---
+                    const userQuestion = userQuestionTextarea.value.trim();
+
+                    let promptContext = `請根據以下三傳占卜的結果`;
+                    if (userQuestion) {
+                        promptContext += `，並結合使用者提出的問題「${userQuestion}」`;
+                    }
+                    promptContext += `，提供一個詳細、綜合性的解讀，語氣溫和專業，使用繁體中文。\n\n`;
+
+                    if (userQuestion) {
+                        promptContext += `使用者提問：${userQuestion}\n\n`; // 再次明確標示問題
+                    }
+
                     promptContext += `占卜時間：公曆 ${calculationResult.rawInput.date} ${calculationResult.rawInput.time} (農曆 ${calculationResult.lunarDate} ${calculationResult.dizhiHour})\n`;
                     promptContext += `三傳結果：\n`;
                     promptContext += `- 初傳：${calculationResult.sanTran.first.number} (${calculationResult.sanTran.first.name}) - ${calendar.hexagramDetails[calculationResult.sanTran.first.number].meaning}\n`;
