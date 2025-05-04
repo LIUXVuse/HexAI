@@ -137,13 +137,18 @@
             cursor: pointer;
             font-size: 1.05em;
             font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.1s ease;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
             flex-grow: 1;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
         button:hover {
             background-color: var(--accent-hover);
             transform: translateY(-2px);
+            box-shadow: 0 0 15px 5px rgba(154, 142, 187, 0.6);
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 0 18px 6px rgba(154, 142, 187, 0.7);
         }
         button:disabled {
             background-color: #555;
