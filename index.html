@@ -24,9 +24,20 @@
             --footer-text: #8080a0;
         }
 
+        @keyframes move-particles {
+          0% { background-position: 0 0, 0 0; } /* Initial position for both layers */
+          100% { background-position: -1000px 500px, -800px -300px; } /* Adjust distance/direction for desired speed/movement */
+        }
+
         body {
             font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle, rgba(224, 224, 224, 0.1) 1px, transparent 1.5px), /* Increased opacity from 0.06 */
+                radial-gradient(circle, rgba(160, 160, 192, 0.08) 2px, transparent 2.5px); /* Increased opacity from 0.05 */
+            background-size: 70px 70px, 110px 110px; /* Control density (larger size = less dense) */
+            background-position: 0 0, 35px 35px; /* Initial offset for layers */
+            animation: move-particles 90s linear infinite; /* Apply animation, adjust duration for speed */
             color: var(--primary-text);
             line-height: 1.7;
             padding: 20px;
@@ -35,10 +46,15 @@
             display: flex;
             flex-direction: column;
             min-height: calc(100vh - 40px); /* 計算高度以推動頁尾 */
+            position: relative; /* Needed for z-index stacking context */
+            z-index: 0; /* Ensure body is the base layer */
+            overflow-x: hidden; /* Prevent potential horizontal scrollbar from animation */
         }
 
         main {
             flex-grow: 1; /* 讓主內容區擴展 */
+            position: relative; /* Ensure main content is above the animated background */
+            z-index: 1;
         }
 
         h1, h2 {
@@ -229,6 +245,8 @@
             color: var(--footer-text);
             font-size: 0.9em;
             line-height: 1.6;
+            position: relative; /* Ensure footer is above the animated background */
+            z-index: 1;
         }
         .footer p {
             margin: 5px 0;
